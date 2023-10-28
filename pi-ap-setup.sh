@@ -65,10 +65,14 @@ table ip filter {
 fi
 
 # Ensure IP Forwarding is enabled
-if ! grep -q 'net.ipv4.ip_forward=1' /etc/sysctl.conf; then
+if grep -q '^#net.ipv4.ip_forward=1' /etc/sysctl.conf; then
+    # Uncomment the line
+    sudo sed -i 's/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+elif ! grep -q '^net.ipv4.ip_forward=1' /etc/sysctl.conf; then
+    # Append the line if it doesn't exist
     echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
-    sudo sysctl -p
 fi
+sudo sysctl -p
 
 # Set static IP for wlan0
 if ! grep -q 'interface wlan0' /etc/dhcpcd.conf; then
