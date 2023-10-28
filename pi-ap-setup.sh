@@ -68,6 +68,24 @@ table ip filter {
     sudo nft -f "$NFTABLES_CONF"
 fi
 
+NFTABLES_SERVICE="/etc/systemd/system/nftables.service"
+if [ ! -f "$NFTABLES_SERVICE" ]; then
+    echo "[Unit]
+Description=Set up nftables rules
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/nft -f /etc/nftables.conf
+ExecReload=/usr/sbin/nft -f /etc/nftables.conf
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target" | sudo tee "$NFTABLES_SERVICE"
+    sudo systemctl daemon-reload
+    sudo systemctl enable nftables
+fi
+
 
 # Ensure IP Forwarding is enabled
 if grep -q '^#net.ipv4.ip_forward=1' /etc/sysctl.conf; then
