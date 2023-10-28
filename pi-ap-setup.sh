@@ -65,6 +65,61 @@ static ip_address=192.168.220.1/24" | sudo tee -a /etc/dhcpcd.conf
 # Restart dhcpcd to apply the new configuration
 sudo systemctl restart dhcpcd
 
+# Boot info script
+echo '#!/bin/bash
+
+# Display ASCII art
+echo "
+  VPN:
+  [===|===>  
+  BANKER:
+  $$
+ /  \\
+ \__/
+
+"
+
+# Extract WiFi name and password from hostapd.conf
+SSID=$(grep "ssid=" /etc/hostapd/hostapd.conf | awk -F"=" '\''{print $2}'\'')
+PASSWORD=$(grep "wpa_passphrase=" /etc/hostapd/hostapd.conf | awk -F"=" '\''{print $2}'\'')
+
+# Print WiFi name and password
+echo "WiFi Name: $SSID"
+echo "Password: $PASSWORD"
+
+# Check for internet access
+if ping -c 1 8.8.8.8 &> /dev/null; then
+    echo "Internet Access: Yes"
+else
+    echo "Internet Access: No"
+fi
+
+# Identify the interface connected to the internet and the access point
+INTERNET_INTERFACE=$(ip route | grep default | awk '\''{print $5}'\'')
+AP_INTERFACE="wlan0"  # assuming wlan0 is always the access point
+echo "Internet Interface: $INTERNET_INTERFACE"
+echo "Access Point Interface: $AP_INTERFACE"
+
+' | sudo tee /usr/local/bin/boot_info.sh
+
+# Make the script executable
+sudo chmod +x /usr/local/bin/boot_info.sh
+
+# Create a systemd service to run the script on boot
+echo '[Unit]
+Description=Display boot information
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/boot_info.sh
+
+[Install]
+WantedBy=multi-user.target
+' | sudo tee /etc/systemd/system/boot_info.service
+
+# Enable the systemd service
+sudo systemctl enable boot_info.service
+
 # Enable and start the services
 sudo systemctl unmask hostapd
 sudo systemctl enable nftables
@@ -75,4 +130,4 @@ sudo systemctl start hostapd
 sudo systemctl start dnsmasq
 
 # Print a success message
-echo "Wi-Fi hotspot setup complete! Connect to 'lereseauderemi' with the password '1111111111'."
+echo "Setup complete! Connect to 'lereseauderemi' with the password '1111111111'."
