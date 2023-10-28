@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# Update and install required packages
-sudo apt update
-sudo apt install -y hostapd dnsmasq nftables dhcpcd5
+# Update and install required packages without prompts
+sudo DEBIAN_FRONTEND=noninteractive apt-get update
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y hostapd dnsmasq nftables dhcpcd5 openvpn vim
+
 
 # Stop and disable the services while we configure them
 sudo systemctl stop hostapd
