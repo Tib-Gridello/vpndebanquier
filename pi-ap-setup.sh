@@ -4,17 +4,13 @@
 sudo DEBIAN_FRONTEND=noninteractive apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y hostapd dnsmasq nftables dhcpcd5 openvpn vim
 
-# Stop and disable the services while we configure them
+# Stop the services while we configure them
 sudo systemctl stop hostapd
 sudo systemctl stop dnsmasq
-sudo systemctl unmask hostapd
-sudo systemctl disable hostapd
-sudo systemctl disable dnsmasq
+sudo systemctl stop dhcpcd
 
 # Configure hostapd for Wi-Fi access point
-HOSTAPD_CONF="/etc/hostapd/hostapd.conf"
-if [ ! -f "$HOSTAPD_CONF" ]; then
-    echo "interface=wlan0
+echo "interface=wlan0
 driver=nl80211
 ssid=lereseauderemi
 hw_mode=g
@@ -27,24 +23,17 @@ wpa=2
 wpa_passphrase=1111111111
 wpa_key_mgmt=WPA-PSK
 wpa_pairwise=TKIP
-rsn_pairwise=CCMP" | sudo tee "$HOSTAPD_CONF"
-fi
+rsn_pairwise=CCMP" | sudo tee /etc/hostapd/hostapd.conf
 
 # Point the default configuration to the file we've just created
-if ! grep -q 'DAEMON_CONF="/etc/hostapd/hostapd.conf"' /etc/default/hostapd; then
-    echo 'DAEMON_CONF="/etc/hostapd/hostapd.conf"' | sudo tee -a /etc/default/hostapd
-fi
+echo 'DAEMON_CONF="/etc/hostapd/hostapd.conf"' | sudo tee /etc/default/hostapd
 
 # Configure dnsmasq
-DNSMASQ_CONF="/etc/dnsmasq.conf"
-if [ ! -f "$DNSMASQ_CONF" ]; then
-    echo "interface=wlan0
-dhcp-range=192.168.220.50,192.168.220.150,12h" | sudo tee "$DNSMASQ_CONF"
-fi
-# Set up IP forwarding with nftables
-NFTABLES_CONF="/etc/nftables.conf"
-if [ ! -f "$NFTABLES_CONF" ]; then
-    echo "table ip nat {
+echo "interface=wlan0
+dhcp-range=192.168.220.50,192.168.220.150,12h" | sudo tee /etc/dnsmasq.conf
+
+# Configure nftables
+echo "table ip nat {
     chain prerouting { type nat hook prerouting priority 0; }
     chain postrouting {
         type nat hook postrouting priority 100;
@@ -59,50 +48,25 @@ table ip filter {
         ip saddr 192.168.220.0/24 ip daddr != 192.168.220.0/24 accept
     }
     chain output { type filter hook output priority 0; }
-}" | sudo tee "$NFTABLES_CONF"
-    
-    # Flush current ruleset
-    sudo nft flush ruleset
-    
-    # Load the new ruleset
-    sudo nft -f "$NFTABLES_CONF"
-fi
+}" | sudo tee /etc/nftables.conf
 
-NFTABLES_SERVICE="/etc/systemd/system/nftables.service"
-if [ ! -f "$NFTABLES_SERVICE" ]; then
-    echo "[Unit]
-Description=Set up nftables rules
-After=network.target
-
-[Service]
-Type=oneshot
-ExecStart=/usr/sbin/nft -f /etc/nftables.conf
-ExecReload=/usr/sbin/nft -f /etc/nftables.conf
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target" | sudo tee "$NFTABLES_SERVICE"
-    sudo systemctl daemon-reload
-    sudo systemctl enable nftables
-fi
-
+# Load the nftables ruleset
+sudo nft flush ruleset
+sudo nft -f /etc/nftables.conf
 
 # Ensure IP Forwarding is enabled
-if grep -q '^#net.ipv4.ip_forward=1' /etc/sysctl.conf; then
-    # Uncomment the line
-    sudo sed -i 's/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
-elif ! grep -q '^net.ipv4.ip_forward=1' /etc/sysctl.conf; then
-    # Append the line if it doesn't exist
-    echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
-fi
+sudo sed -i '/^#net.ipv4.ip_forward=1/c\net.ipv4.ip_forward=1' /etc/sysctl.conf
 sudo sysctl -p
 
 # Set static IP for wlan0
-if ! grep -q 'interface wlan0' /etc/dhcpcd.conf; then
-    echo -e "\ninterface wlan0\nstatic ip_address=192.168.220.1/24" | sudo tee -a /etc/dhcpcd.conf
-fi
+echo "interface wlan0
+static ip_address=192.168.220.1/24" | sudo tee -a /etc/dhcpcd.conf
+
+# Restart dhcpcd to apply the new configuration
+sudo systemctl restart dhcpcd
 
 # Enable and start the services
+sudo systemctl unmask hostapd
 sudo systemctl enable nftables
 sudo systemctl enable hostapd
 sudo systemctl enable dnsmasq
