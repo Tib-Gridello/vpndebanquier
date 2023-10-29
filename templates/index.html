@@ -7,7 +7,7 @@
     {% for message in get_flashed_messages() %}
         <p>{{ message }}</p>
     {% endfor %}
-    <form action="" method="post">
+    <form action="{{ url_for('index') if not scanned else url_for('scan') }}" method="post">
         {{ form.hidden_tag() }}
         <p>
             {{ form.interface.label }}<br>
