@@ -12,7 +12,9 @@
         <p>
             {{ form.interface.label }}<br>
             {{ form.interface }}<br>
+            {{ form.scan() }}
         </p>
+        {% if scanned %}
         <p>
             {{ form.ssid.label }}<br>
             {{ form.ssid }}<br>
@@ -21,7 +23,8 @@
             {{ form.password.label }}<br>
             {{ form.password }}<br>
         </p>
-        <p><input type="submit" value="Connect"></p>
+        <p>{{ form.connect() }}</p>
+        {% endif %}
     </form>
 </body>
 </html>
