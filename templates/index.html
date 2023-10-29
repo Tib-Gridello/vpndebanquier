@@ -26,6 +26,14 @@
         <p>{{ form.connect() }}</p>
         {% endif %}
     </form>
+<script>
+    document.querySelector('input[name="scan"]').addEventListener('click', function(event) {
+        event.preventDefault();
+        let form = document.querySelector('form');
+        form.action = "{{ url_for('scan') }}";
+        form.submit();
+    });
+</script>
 </body>
 </html>
 
