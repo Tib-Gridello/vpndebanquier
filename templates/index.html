@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connect to Wi-Fi</title>
+</head>
+<body>
+    {% for message in get_flashed_messages() %}
+        <p>{{ message }}</p>
+    {% endfor %}
+    <form action="" method="post">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.interface.label }}<br>
+            {{ form.interface }}<br>
+        </p>
+        <p>
+            {{ form.ssid.label }}<br>
+            {{ form.ssid }}<br>
+        </p>
+        <p>
+            {{ form.password.label }}<br>
+            {{ form.password }}<br>
+        </p>
+        <p><input type="submit" value="Connect"></p>
+    </form>
+</body>
+</html>
+
