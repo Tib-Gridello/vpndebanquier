@@ -20,6 +20,12 @@ pip install Flask Flask-WTF Flask-Session
 
 echo "[+] Flask environment setup complete."
 
+# Move the app, templates, and systemd service files to their correct locations
+mv app.py $HOMEDIR/pi_vpn_wifi_selector/
+mv templates $HOMEDIR/pi_vpn_wifi_selector/
+
+echo "[+] Moved Flask app and templates."
+
 # Create systemd service file
 echo "[+] Setting up systemd service..."
 cat <<EOL | sudo tee /etc/systemd/system/pi_vpn_wifi_selector.service
@@ -49,5 +55,5 @@ echo "[+] Systemd service setup complete."
 # Display the IP Address for wlan0
 IP_ADDRESS_WLAN0=$(ip addr show wlan0 | grep inet | awk '{ print $2 }' | cut -d/ -f1)
 echo "[+] Setup complete! Connect to the Raspberry Pi's WiFi network and then access:"
-echo "http://$IP_ADDRESS_WLAN0"
+echo "http://$IP_ADDRESS_WLAN0:5555"
 
