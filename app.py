@@ -27,32 +27,41 @@ def index():
     interfaces = [i for i in os.listdir('/sys/class/net/') if re.match(r'wlan\d+', i)]
     form.interface.choices = [(i, i) for i in interfaces]
 
-    if form.validate_on_submit():
-        if form.scan.data:
-            selected_interface = form.interface.data
-            command = ['sudo', 'iwlist', selected_interface, 'scan']
-            scan_output = os.popen(' '.join(command)).read()
+    if form.scan.data:
+        return redirect(url_for('scan'))
 
-            # Save the scan output to a file
-            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-            filename = f"{selected_interface}-scan{timestamp}"
-            with open(filename, 'w') as f:
-                f.write(scan_output)
-
-            ssids = [line for line in scan_output.splitlines() if "ESSID" in line]
-            ssids = [re.search(r'"(.*?)"', s).group(1) for s in ssids if re.search(r'"(.*?)"', s)]
-            form.ssid.choices = [(s, s) for s in ssids]
-            return render_template('index.html', form=form, scanned=True)
-
-        if form.connect.data:
-            # Add the logic to update the Wi-Fi connection
-            interface = form.interface.data
-            ssid = form.ssid.data
-            password = form.password.data
-            flash('Attempting to connect to {} on {}'.format(ssid, interface))
-            return redirect(url_for('index'))
+    if form.connect.data:
+        # Add the logic to update the Wi-Fi connection
+        interface = form.interface.data
+        ssid = form.ssid.data
+        password = form.password.data
+        flash('Attempting to connect to {} on {}'.format(ssid, interface))
+        return redirect(url_for('index'))
 
     return render_template('index.html', form=form, scanned=False)
 
+@app.route('/scan', methods=['POST'])
+def scan():
+    form = WiFiForm()
+
+    selected_interface = form.interface.data
+    logging.debug(f"Scanning on {selected_interface}")
+
+    command = ['sudo', 'iwlist', selected_interface, 'scan']
+    scan_output = os.popen(' '.join(command)).read()
+
+    # Save the scan output to a file
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    filename = f"{selected_interface}-scan{timestamp}"
+    with open(filename, 'w') as f:
+        f.write(scan_output)
+
+    ssids = [line for line in scan_output.splitlines() if "ESSID" in line]
+    ssids = [re.search(r'"(.*?)"', s).group(1) for s in ssids if re.search(r'"(.*?)"', s)]
+    form.ssid.choices = [(s, s) for s in ssids]
+
+    return render_template('index.html', form=form, scanned=True)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5555)
+
