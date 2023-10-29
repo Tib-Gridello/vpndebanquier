@@ -4,6 +4,7 @@ from wtforms import SelectField, PasswordField, SubmitField
 import os
 import re
 import logging
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'  # Used for form protection
@@ -31,6 +32,13 @@ def index():
             selected_interface = form.interface.data
             command = ['sudo', 'iwlist', selected_interface, 'scan']
             scan_output = os.popen(' '.join(command)).read()
+
+            # Save the scan output to a file
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            filename = f"{selected_interface}-scan{timestamp}"
+            with open(filename, 'w') as f:
+                f.write(scan_output)
+
             ssids = [line for line in scan_output.splitlines() if "ESSID" in line]
             ssids = [re.search(r'"(.*?)"', s).group(1) for s in ssids if re.search(r'"(.*?)"', s)]
             form.ssid.choices = [(s, s) for s in ssids]
