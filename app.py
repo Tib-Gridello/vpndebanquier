@@ -27,16 +27,17 @@ def index():
     interfaces = [i for i in os.listdir('/sys/class/net/') if re.match(r'wlan\d+', i)]
     form.interface.choices = [(i, i) for i in interfaces]
 
-    if form.scan.data:
-        return redirect(url_for('scan'))
+    if form.validate_on_submit():
+        if form.scan.data:
+            return redirect(url_for('scan'))
 
-    if form.connect.data:
-        # Add the logic to update the Wi-Fi connection
-        interface = form.interface.data
-        ssid = form.ssid.data
-        password = form.password.data
-        flash('Attempting to connect to {} on {}'.format(ssid, interface))
-        return redirect(url_for('index'))
+        if form.connect.data:
+            # Add the logic to update the Wi-Fi connection
+            interface = form.interface.data
+            ssid = form.ssid.data
+            password = form.password.data
+            flash('Attempting to connect to {} on {}'.format(ssid, interface))
+            return redirect(url_for('index'))
 
     return render_template('index.html', form=form, scanned=False)
 
@@ -64,4 +65,3 @@ def scan():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5555)
-
