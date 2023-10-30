@@ -5,11 +5,12 @@
 
 
 Wireguard pour gain de vitesse
+RaspAP qui permet directement la connection VPN
 
 IGD UPnP
 Faire tourner un .onion qui fait des requetes sur la pi domicile :
--Ip Local
--Ip Publique
+*Ip Local
+*Ip Publique
 
 Faut ajouter le protocole dans la boite.
 Permet de bypass les ouvertures de port ?
