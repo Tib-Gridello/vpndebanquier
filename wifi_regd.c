@@ -396,7 +396,9 @@ static void _rtw_regd_init_wiphy(struct rtw_regulatory *reg, struct wiphy *wiphy
 	wiphy->regulatory_flags &= ~REGULATORY_DISABLE_BEACON_HINTS;
 #endif
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 19, 0)) && (LINUX_VERSION_CODE < KERNEL_VERSION(6, 5, 0))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 19, 0)) && (LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 39)) \
+	|| (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 3, 0)) && (LINUX_VERSION_CODE < KERNEL_VERSION(6, 3, 13)) \
+	|| (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)) && (LINUX_VERSION_CODE < KERNEL_VERSION(6, 4, 4))
 	wiphy->regulatory_flags |= REGULATORY_IGNORE_STALE_KICKOFF;
 #endif
 
