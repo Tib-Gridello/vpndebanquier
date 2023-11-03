@@ -17,6 +17,15 @@ Permet de bypass les ouvertures de port ?
 
 Genere un fichier config ovpn et l'envoi par mail ?
 
+# USB WIFI
 
+Pour la AWUS036ACS :  
+git clone aircrack-ng/rtl8821au
 
+//pour le moment dl mon repo vpndebanquier et remplacer wifi_regd.c dans le dossier osdep/linux  
+sudo make && sudo make install
 
+# Speedtest
+
+wlan de la pi  <--> eth0 : ~20
+ALFA AWUS036ACS <--> eth0 : ~20
