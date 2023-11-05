@@ -68,7 +68,18 @@ setup_hotspot() {
     echo "####################"
     echo "Setting up $interface as a WiFi hotspot..."
 
+    # Tell NetworkManager to ignore this interface
+    echo "Telling NetworkManager to ignore $interface..."
+    sudo bash -c "cat > /etc/NetworkManager/conf.d/$interface.conf" <<EOF
+[keyfile]
+unmanaged-devices=interface-name:$interface
+EOF
+
+    # Restart NetworkManager to apply changes
+    sudo systemctl restart NetworkManager
+
     # Configure hostapd
+    echo "Configuring hostapd..."
     sudo bash -c "cat > /etc/hostapd/hostapd.conf" <<EOF
 interface=$interface
 ssid=PiHotspot
@@ -85,13 +96,18 @@ wpa_pairwise=TKIP
 rsn_pairwise=CCMP
 EOF
 
+    # Ensure hostapd knows where to find the configuration file
+    echo "DAEMON_CONF=\"/etc/hostapd/hostapd.conf\"" | sudo tee -a /etc/default/hostapd
+
     # Configure dnsmasq
+    echo "Configuring dnsmasq..."
     sudo bash -c "cat > /etc/dnsmasq.conf" <<EOF
 interface=$interface
 dhcp-range=192.168.220.10,192.168.220.50,255.255.255.0,24h
 EOF
 
     # Configure dhcpcd
+    echo "Configuring dhcpcd..."
     sudo bash -c "cat > /etc/dhcpcd.conf" <<EOF
 interface $interface
 static ip_address=192.168.220.1/24
@@ -99,14 +115,22 @@ nohook wpa_supplicant
 EOF
 
     # Restart services
+    echo "Restarting network services..."
     sudo systemctl daemon-reload
     sudo systemctl restart dhcpcd
     sudo systemctl unmask hostapd
     sudo systemctl enable hostapd
+    sudo systemctl restart hostapd
     sudo systemctl enable dnsmasq
-    sudo systemctl start hostapd
-    sudo systemctl start dnsmasq
+    sudo systemctl restart dnsmasq
+
+    # Check service status
+    echo "Checking hostapd status..."
+    sudo systemctl status hostapd | grep "Active"
+    echo "Checking dnsmasq status..."
+    sudo systemctl status dnsmasq | grep "Active"
 }
+
 
 # Main execution
 if [[ $1 == "--help" ]]; then
