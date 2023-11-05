@@ -34,7 +34,17 @@ detect_and_assign_nicknames() {
 
 # Function to reset network interfaces to default state
 reset_network_interfaces() {
-    # Your existing code for resetting network interfaces
+    echo "####################"
+    echo "Resetting network interfaces to default state..."
+
+    # Remove any existing configuration files
+    sudo rm -f /etc/hostapd/hostapd.conf
+    sudo rm -f /etc/dnsmasq.conf
+    sudo rm -f /etc/dhcpcd.conf
+    sudo rm -f $ENV_FILE
+
+    # Restart network services
+    sudo systemctl restart network-manager
 }
 
 # Function to connect an interface to the internet
@@ -47,10 +57,61 @@ connect_to_internet() {
 
 # Function to set up a WiFi hotspot
 setup_hotspot() {
-    # Your existing code for setting up a WiFi hotspot
+    local interface=$1
+    echo "####################"
+    echo "Setting up $interface as a WiFi hotspot..."
+
+    # Configure hostapd
+    sudo bash -c "cat > /etc/hostapd/hostapd.conf" <<EOF
+interface=$interface
+ssid=PiHotspot
+hw_mode=g
+channel=7
+wmm_enabled=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=raspberry
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+EOF
+
+    # Configure dnsmasq
+    sudo bash -c "cat > /etc/dnsmasq.conf" <<EOF
+interface=$interface
+dhcp-range=192.168.220.10,192.168.220.50,255.255.255.0,24h
+EOF
+
+    # Configure dhcpcd
+    sudo bash -c "cat > /etc/dhcpcd.conf" <<EOF
+interface $interface
+static ip_address=192.168.220.1/24
+nohook wpa_supplicant
+EOF
+
+    # Restart services
+    sudo systemctl daemon-reload
+    sudo systemctl restart dhcpcd
+    sudo systemctl unmask hostapd
+    sudo systemctl enable hostapd
+    sudo systemctl enable dnsmasq
+    sudo systemctl start hostapd
+    sudo systemctl start dnsmasq
 }
 
 # Main execution
+if [[ $1 == "--help" ]]; then
+    show_help
+    exit 0
+fi
+
+if [[ $1 == "--clean" ]]; then
+    reset_network_interfaces
+    exit 0
+fi
+
 if [[ ! -f $ENV_FILE ]]; then
     detect_and_assign_nicknames
 else
@@ -73,7 +134,7 @@ else
 fi
 
 # Set a default interface if no argument is provided
-if [[ -z $1 || $1 == "--skip" || $1 == "--clean" ]]; then
+if [[ -z $1 || $1 == "--skip" ]]; then
     echo "####################"
     echo "No interface specified. Using default."
     internet_interface=$TheOne
@@ -104,5 +165,3 @@ connect_to_internet "$internet_interface"
 
 # Setup the other interface as a hotspot
 setup_hotspot "$hotspot_interface"
-
-# Add any additional logic or functions as needed
