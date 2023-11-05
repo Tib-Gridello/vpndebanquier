@@ -54,6 +54,16 @@ reset_network_interfaces() {
     fi
 }
 
+echo "Disconnecting other interfaces..."
+for intf in $(iw dev | grep Interface | awk '{print $2}'); do
+    if [[ $intf != $internet_interface ]]; then
+        echo "Disconnecting $intf..."
+        nmcli dev disconnect $intf
+        # Explicitly tell NetworkManager to ignore this interface
+        echo "Telling NetworkManager to ignore $intf..."
+        sudo nmcli dev set $intf managed no
+    fi
+done
 # Function to connect an interface to the internet
 connect_to_internet() {
     local interface=$1
