@@ -8,11 +8,12 @@ WIFI_PASS_FILE=~/wifipass.txt
 
 # Helper message
 show_help() {
-    echo "Usage: $0 [interface|nickname] [--skip]"
+    echo "Usage: $0 [interface|nickname] [--skip] [--clean]"
     echo ""
     echo "interface    The network interface to connect to the internet (e.g., wlan0, wlan1, eth0)."
     echo "nickname     Use 'TheOne' for the USB antenna or 'caca' for the internal antenna."
-    echo "--skip       Skip package updates and installations."
+    echo "--skip       Skip package updates, installations, and network reset."
+    echo "--clean      Remove all configuration files and restart services to default state."
     echo ""
     echo "If no interface or nickname is specified, 'TheOne' (USB antenna) will be used by default."
 }
@@ -31,26 +32,21 @@ detect_and_assign_nicknames() {
     source $ENV_FILE
 }
 
-# Check for the --skip option
+# Check for the --skip and --clean options
 SKIP_UPDATE=false
+CLEAN=false
 for arg in "$@"; do
     if [[ $arg == "--skip" ]]; then
         SKIP_UPDATE=true
     fi
+    if [[ $arg == "--clean" ]]; then
+        CLEAN=true
+    fi
 done
-
-# Ensure required packages are installed
-if [ "$SKIP_UPDATE" = false ]; then
-    sudo DEBIAN_FRONTEND=noninteractive apt-get update
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-change-held-packages hostapd dnsmasq network-manager dhcpcd5
-fi
-
-# Read WiFi credentials from ~/wifipass.txt
-SSID=$(sed -n '1p' $WIFI_PASS_FILE)
-PASSWORD=$(sed -n '2p' $WIFI_PASS_FILE)
 
 # Function to reset network interfaces to default state
 reset_network_interfaces() {
+    echo "####################"
     echo "Resetting network interfaces to default state..."
     sudo systemctl stop hostapd
     sudo systemctl stop dnsmasq
@@ -160,7 +156,7 @@ else
 fi
 
 # Set a default interface if no argument is provided
-if [[ -z $1 || $1 == "--skip" ]]; then
+if [[ -z $1 || $1 == "--skip" || $1 == "--clean" ]]; then
     echo "####################"
     echo "No interface specified. Using default."
     internet_interface=$TheOne
@@ -182,14 +178,12 @@ fi
 # Check for the --help option
 if [[ $1 == "--help" ]]; then
     show_help
-else
+elif [[ $CLEAN == true ]]; then
     reset_network_interfaces
+else
+    if [[ $SKIP_UPDATE == false ]]; then
+        reset_network_interfaces
+    fi
     connect_to_internet "$internet_interface"
     setup_hotspot "$hotspot_interface"
 fi
-
-# Uncomment the following lines to persist settings across reboots
-# sudo crontab -l > mycron
-# echo "@reboot /path/to/this/script $internet_interface --skip" >> mycron
-# sudo crontab mycron
-# rm mycron
