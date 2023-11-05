@@ -1,6 +1,5 @@
 # vpndebanquier
 
-
 **To check and add :**
 
 
@@ -16,6 +15,12 @@ Faut ajouter le protocole dans la boite.
 Permet de bypass les ouvertures de port ?
 
 Genere un fichier config ovpn et l'envoi par mail ?
+
+#Network manager
+
+wlan1 scan and  connect with nmcli device wifi list ifname wlan1 
+
+
 
 # USB WIFI
 
