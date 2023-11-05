@@ -5,17 +5,6 @@ ENV_FILE=~/wifi_env.sh
 
 # File containing WiFi credentials
 WIFI_PASS_FILE=~/wifipass.txt
-# Read WiFi credentials from ~/wifipass.txt
-if [[ -f $WIFI_PASS_FILE ]]; then
-    SSID=$(sed -n '1p' $WIFI_PASS_FILE)
-    PASSWORD=$(sed -n '2p' $WIFI_PASS_FILE)
-    
-    # Check if SSID or PASSWORD is empty
-    if [[ -z "$SSID" || -z "$PASSWORD" ]]; then
-        echo "Error: SSID or password is empty in $WIFI_PASS_FILE."
-        exit 1
-    fi
-
 
 # Helper message
 show_help() {
@@ -43,135 +32,22 @@ detect_and_assign_nicknames() {
     source $ENV_FILE
 }
 
-# Check for the --skip and --clean options
-SKIP_UPDATE=false
-CLEAN=false
-for arg in "$@"; do
-    if [[ $arg == "--skip" ]]; then
-        SKIP_UPDATE=true
-    fi
-    if [[ $arg == "--clean" ]]; then
-        CLEAN=true
-    fi
-done
-
 # Function to reset network interfaces to default state
 reset_network_interfaces() {
-    echo "####################"
-    echo "Resetting network interfaces to default state..."
-
-    # Clear all IPv6 addresses
-    sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
-    sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
-    sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=1
-
-    # Check if the connections are active before bringing them down
-    if nmcli con show --active | grep -q "Wired connection 1"; then
-        sudo nmcli con down id "Wired connection 1"
-    fi
-    if nmcli con show --active | grep -q "Wireless connection 1"; then
-        sudo nmcli con down id "Wireless connection 1"
-    fi
-
-    sudo nmcli con up id "Wired connection 1"
-    sudo nmcli con up id "Wireless connection 1"
-
-    # Remove configuration files
-    sudo rm -f /etc/hostapd/hostapd.conf
-    sudo rm -f /etc/dnsmasq.conf
-    sudo rm -f /etc/dhcpcd.conf
-
-    # Restart network services
-    sudo systemctl restart NetworkManager
+    # Your existing code for resetting network interfaces
 }
-
 
 # Function to connect an interface to the internet
 connect_to_internet() {
     local interface=$1
     echo "####################"
     echo "Connecting $interface to the internet..."
-    echo "SSID = $SSID"
-    echo ""
-    nmcli dev wifi connect "$SSID" password "$PASSWORD" ifname "$interface"
+    nmcli dev wifi connect "\"$SSID\"" password "\"$PASSWORD\"" ifname "$interface"
 }
 
 # Function to set up a WiFi hotspot
 setup_hotspot() {
-    local interface=$1
-    echo "####################"
-    echo "Setting up $interface as a WiFi hotspot..."
-
-    # Configure hostapd
-    sudo bash -c "cat > /etc/hostapd/hostapd.conf" <<EOF
-interface=$interface
-driver=nl80211
-ssid=lereseauderemi
-hw_mode=g
-channel=7
-wmm_enabled=0
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-wpa=2
-wpa_passphrase=1111111111
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP
-EOF
-
-    # Point the default configuration to the file we've just created
-    echo 'DAEMON_CONF="/etc/hostapd/hostapd.conf"' | sudo tee /etc/default/hostapd
-
-    # Configure dnsmasq
-    sudo bash -c "cat > /etc/dnsmasq.conf" <<EOF
-interface=$interface
-dhcp-range=192.168.220.50,192.168.220.150,12h
-EOF
-
-    # Configure nftables
-    sudo bash -c "cat > /etc/nftables.conf" <<EOF
-table ip nat {
-    chain prerouting { type nat hook prerouting priority 0; }
-    chain postrouting {
-        type nat hook postrouting priority 100;
-        masquerade;
-    }
-}
-
-table ip filter {
-    chain input { type filter hook input priority 0; }
-    chain forward {
-        type filter hook forward priority 0;
-        ip saddr 192.168.220.0/24 ip daddr != 192.168.220.0/24 accept
-    }
-    chain output { type filter hook output priority 0; }
-}
-EOF
-
-    # Load the nftables ruleset
-    sudo nft flush ruleset
-    sudo nft -f /etc/nftables.conf
-
-    # Ensure IP Forwarding is enabled
-    sudo sed -i '/^#net.ipv4.ip_forward=1/c\net.ipv4.ip_forward=1' /etc/sysctl.conf
-    sudo sysctl -p
-
-    # Set static IP for the hotspot interface
-    sudo bash -c "cat > /etc/dhcpcd.conf" <<EOF
-interface $interface
-static ip_address=192.168.220.1/24
-nohook wpa_supplicant
-EOF
-
-    # Restart services
-    sudo systemctl daemon-reload
-    sudo systemctl restart dhcpcd
-    sudo systemctl unmask hostapd
-    sudo systemctl enable hostapd
-    sudo systemctl enable dnsmasq
-    sudo systemctl start hostapd
-    sudo systemctl start dnsmasq
+    # Your existing code for setting up a WiFi hotspot
 }
 
 # Main execution
@@ -230,4 +106,3 @@ connect_to_internet "$internet_interface"
 setup_hotspot "$hotspot_interface"
 
 # Add any additional logic or functions as needed
-
