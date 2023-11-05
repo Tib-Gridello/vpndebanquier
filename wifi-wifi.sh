@@ -181,6 +181,21 @@ else
     source $ENV_FILE
 fi
 
+# Read WiFi credentials from ~/wifipass.txt
+if [[ -f $WIFI_PASS_FILE ]]; then
+    SSID=$(sed -n '1p' $WIFI_PASS_FILE)
+    PASSWORD=$(sed -n '2p' $WIFI_PASS_FILE)
+    
+    # Check if SSID or PASSWORD is empty
+    if [[ -z "$SSID" || -z "$PASSWORD" ]]; then
+        echo "Error: SSID or password is empty in $WIFI_PASS_FILE."
+        exit 1
+    fi
+else
+    echo "Error: WiFi credentials file $WIFI_PASS_FILE not found."
+    exit 1
+fi
+
 # Set a default interface if no argument is provided
 if [[ -z $1 || $1 == "--skip" || $1 == "--clean" ]]; then
     echo "####################"
@@ -201,15 +216,18 @@ else
     hotspot_interface=$TheOne
 fi
 
-# Check for the --help option
-if [[ $1 == "--help" ]]; then
-    show_help
-elif [[ $CLEAN == true ]]; then
-    reset_network_interfaces
-else
-    if [[ $SKIP_UPDATE == false ]]; then
-        reset_network_interfaces
+# Disconnect all other wireless interfaces before connecting the designated one
+for intf in $(iw dev | grep Interface | awk '{print $2}'); do
+    if [[ $intf != $internet_interface ]]; then
+        nmcli dev disconnect $intf
     fi
-    connect_to_internet "$internet_interface"
-    setup_hotspot "$hotspot_interface"
-fi
+done
+
+# Connect the designated interface to the internet
+connect_to_internet "$internet_interface"
+
+# Setup the other interface as a hotspot
+setup_hotspot "$hotspot_interface"
+
+# Add any additional logic or functions as needed
+
