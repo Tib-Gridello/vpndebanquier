@@ -33,6 +33,7 @@ detect_and_assign_nicknames() {
 }
 
 # Function to reset network interfaces to default state
+# Function to reset network interfaces to default state
 reset_network_interfaces() {
     echo "####################"
     echo "Resetting network interfaces to default state..."
@@ -44,7 +45,13 @@ reset_network_interfaces() {
     sudo rm -f $ENV_FILE
 
     # Restart network services
-    sudo systemctl restart network-manager
+    if systemctl list-units --full -all | grep -Fq 'NetworkManager.service'; then
+        sudo systemctl restart NetworkManager
+    elif systemctl list-units --full -all | grep -Fq 'network-manager.service'; then
+        sudo systemctl restart network-manager
+    else
+        echo "NetworkManager service not found. Please install or start the service manually."
+    fi
 }
 
 # Function to connect an interface to the internet
