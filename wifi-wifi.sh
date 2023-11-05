@@ -48,19 +48,32 @@ done
 reset_network_interfaces() {
     echo "####################"
     echo "Resetting network interfaces to default state..."
-    sudo systemctl stop hostapd
-    sudo systemctl stop dnsmasq
-    sudo systemctl disable hostapd
-    sudo systemctl disable dnsmasq
-    sudo nmcli con down id "Wired connection 1"
+
+    # Clear all IPv6 addresses
+    sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+    sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
+    sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=1
+
+    # Check if the connections are active before bringing them down
+    if nmcli con show --active | grep -q "Wired connection 1"; then
+        sudo nmcli con down id "Wired connection 1"
+    fi
+    if nmcli con show --active | grep -q "Wireless connection 1"; then
+        sudo nmcli con down id "Wireless connection 1"
+    fi
+
     sudo nmcli con up id "Wired connection 1"
-    sudo nmcli con down id "Wireless connection 1"
     sudo nmcli con up id "Wireless connection 1"
+
+    # Remove configuration files
     sudo rm -f /etc/hostapd/hostapd.conf
     sudo rm -f /etc/dnsmasq.conf
     sudo rm -f /etc/dhcpcd.conf
-    sudo systemctl restart network-manager
+
+    # Restart network services
+    sudo systemctl restart NetworkManager
 }
+
 
 # Function to connect an interface to the internet
 connect_to_internet() {
