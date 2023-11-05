@@ -10,7 +10,7 @@ WIFI_PASS_FILE=~/wifipass.txt
 show_help() {
     echo "Usage: $0 [interface|nickname] [--skip]"
     echo ""
-    echo "interface    The network interface to connect to the internet (e.g., wlan0, wlan1)."
+    echo "interface    The network interface to connect to the internet (e.g., wlan0, wlan1, eth0)."
     echo "nickname     Use 'TheOne' for the USB antenna or 'caca' for the internal antenna."
     echo "--skip       Skip package updates and installations."
     echo ""
@@ -42,7 +42,7 @@ done
 # Ensure required packages are installed
 if [ "$SKIP_UPDATE" = false ]; then
     sudo DEBIAN_FRONTEND=noninteractive apt-get update
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-change-held-packages hostapd dnsmasq network-manager
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-change-held-packages hostapd dnsmasq network-manager dhcpcd5
 fi
 
 # Read WiFi credentials from ~/wifipass.txt
@@ -52,12 +52,30 @@ PASSWORD=$(sed -n '2p' $WIFI_PASS_FILE)
 # Function to connect an interface to the internet
 connect_to_internet() {
     local interface=$1
+    echo "Connecting $interface to the internet..."
     nmcli dev wifi connect "$SSID" password "$PASSWORD" iface "$interface"
+}
+
+# Function to clear previous hotspot configurations
+clear_hotspot() {
+    local interface=$1
+    echo "Clearing previous hotspot configuration for $interface..."
+    sudo systemctl stop hostapd
+    sudo systemctl stop dnsmasq
+    sudo systemctl disable hostapd
+    sudo systemctl disable dnsmasq
+    sudo rm -f /etc/hostapd/hostapd.conf
+    sudo rm -f /etc/dnsmasq.conf
+    sudo sed -i '/^interface '$interface'/d' /etc/dhcpcd.conf
+    sudo sed -i '/^static ip_address=192.168.220.1\/24/d' /etc/dhcpcd.conf
+    sudo sed -i '/^nohook wpa_supplicant/d' /etc/dhcpcd.conf
+    sudo systemctl restart dhcpcd
 }
 
 # Function to set up a WiFi hotspot
 setup_hotspot() {
     local interface=$1
+    echo "Setting up $interface as a WiFi hotspot..."
 
     # Configure hostapd
     sudo bash -c "cat > /etc/hostapd/hostapd.conf" <<EOF
@@ -161,6 +179,7 @@ fi
 if [[ $1 == "--help" ]]; then
     show_help
 else
+    clear_hotspot "$hotspot_interface"
     connect_to_internet "$internet_interface"
     setup_hotspot "$hotspot_interface"
 fi
