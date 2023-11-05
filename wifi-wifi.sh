@@ -95,6 +95,8 @@ connect_to_internet() {
     local interface=$1
     echo "####################"
     echo "Connecting $interface to the internet..."
+    echo "SSID = $SSID"
+    echo ""
     nmcli dev wifi connect "$SSID" password "$PASSWORD" ifname "$interface"
 }
 
