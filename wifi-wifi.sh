@@ -49,32 +49,35 @@ fi
 SSID=$(sed -n '1p' $WIFI_PASS_FILE)
 PASSWORD=$(sed -n '2p' $WIFI_PASS_FILE)
 
-# Function to connect an interface to the internet
-connect_to_internet() {
-    local interface=$1
-    echo "Connecting $interface to the internet..."
-    nmcli dev wifi connect "$SSID" password "$PASSWORD" iface "$interface"
-}
-
-# Function to clear previous hotspot configurations
-clear_hotspot() {
-    local interface=$1
-    echo "Clearing previous hotspot configuration for $interface..."
+# Function to reset network interfaces to default state
+reset_network_interfaces() {
+    echo "Resetting network interfaces to default state..."
     sudo systemctl stop hostapd
     sudo systemctl stop dnsmasq
     sudo systemctl disable hostapd
     sudo systemctl disable dnsmasq
+    sudo nmcli con down id "Wired connection 1"
+    sudo nmcli con up id "Wired connection 1"
+    sudo nmcli con down id "Wireless connection 1"
+    sudo nmcli con up id "Wireless connection 1"
     sudo rm -f /etc/hostapd/hostapd.conf
     sudo rm -f /etc/dnsmasq.conf
-    sudo sed -i '/^interface '$interface'/d' /etc/dhcpcd.conf
-    sudo sed -i '/^static ip_address=192.168.220.1\/24/d' /etc/dhcpcd.conf
-    sudo sed -i '/^nohook wpa_supplicant/d' /etc/dhcpcd.conf
-    sudo systemctl restart dhcpcd
+    sudo rm -f /etc/dhcpcd.conf
+    sudo systemctl restart network-manager
+}
+
+# Function to connect an interface to the internet
+connect_to_internet() {
+    local interface=$1
+    echo "####################"
+    echo "Connecting $interface to the internet..."
+    nmcli dev wifi connect "$SSID" password "$PASSWORD" ifname "$interface"
 }
 
 # Function to set up a WiFi hotspot
 setup_hotspot() {
     local interface=$1
+    echo "####################"
     echo "Setting up $interface as a WiFi hotspot..."
 
     # Configure hostapd
@@ -158,6 +161,7 @@ fi
 
 # Set a default interface if no argument is provided
 if [[ -z $1 || $1 == "--skip" ]]; then
+    echo "####################"
     echo "No interface specified. Using default."
     internet_interface=$TheOne
 else
@@ -179,8 +183,13 @@ fi
 if [[ $1 == "--help" ]]; then
     show_help
 else
-    clear_hotspot "$hotspot_interface"
+    reset_network_interfaces
     connect_to_internet "$internet_interface"
     setup_hotspot "$hotspot_interface"
 fi
 
+# Uncomment the following lines to persist settings across reboots
+# sudo crontab -l > mycron
+# echo "@reboot /path/to/this/script $internet_interface --skip" >> mycron
+# sudo crontab mycron
+# rm mycron
