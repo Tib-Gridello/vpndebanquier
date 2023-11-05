@@ -6,20 +6,22 @@ ENV_FILE=~/wifi_env.sh
 # File containing WiFi credentials
 WIFI_PASS_FILE=~/wifipass.txt
 
-# Ensure required packages are installed
-sudo apt-get update
-sudo apt-get install -y hostapd dnsmasq network-manager
-
-# Disable services to avoid conflicts during setup
-sudo systemctl stop hostapd
-sudo systemctl stop dnsmasq
-sudo systemctl disable hostapd
-sudo systemctl disable dnsmasq
+# Helper message
+show_help() {
+    echo "Usage: $0 [interface|nickname] [--skip]"
+    echo ""
+    echo "interface    The network interface to connect to the internet (e.g., wlan0, wlan1)."
+    echo "nickname     Use 'TheOne' for the USB antenna or 'caca' for the internal antenna."
+    echo "--skip       Skip package updates and installations."
+    echo ""
+    echo "If no interface or nickname is specified, 'TheOne' (USB antenna) will be used by default."
+}
 
 # Function to detect wireless interfaces and assign nicknames
 detect_and_assign_nicknames() {
-    local good_interface=$(iw dev | awk '$1=="Interface" {print $2}' | head -n 1)
-    local caca_interface=$(iw dev | awk '$1=="Interface" {print $2}' | tail -n 1)
+    local usb_interface=$(lsusb | grep -i wireless | awk '{print $2":"$4}' | sed 's/://g')
+    local good_interface=$(iw dev | grep -B 1 "$usb_interface" | awk '$1=="Interface" {print $2}')
+    local caca_interface=$(iw dev | grep -v "$good_interface" | awk '$1=="Interface" {print $2}' | head -n 1)
 
     # Store the nicknames and associated interfaces in the environment file
     echo "export TheOne=$good_interface" > $ENV_FILE
@@ -28,6 +30,20 @@ detect_and_assign_nicknames() {
     # Source the environment file to make variables available in the current session
     source $ENV_FILE
 }
+
+# Check for the --skip option
+SKIP_UPDATE=false
+for arg in "$@"; do
+    if [[ $arg == "--skip" ]]; then
+        SKIP_UPDATE=true
+    fi
+done
+
+# Ensure required packages are installed
+if [ "$SKIP_UPDATE" = false ]; then
+    sudo DEBIAN_FRONTEND=noninteractive apt-get update
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-change-held-packages hostapd dnsmasq network-manager
+fi
 
 # Read WiFi credentials from ~/wifipass.txt
 SSID=$(sed -n '1p' $WIFI_PASS_FILE)
@@ -99,10 +115,15 @@ EOF
     sudo sysctl -p
 
     # Set static IP for the hotspot interface
-    echo "interface $interface
-static ip_address=192.168.220.1/24" | sudo tee -a /etc/dhcpcd.conf
+    sudo bash -c "cat > /etc/dhcpcd.conf" <<EOF
+interface $interface
+static ip_address=192.168.220.1/24
+nohook wpa_supplicant
+EOF
 
     # Restart services
+    sudo systemctl daemon-reload
+    sudo systemctl restart dhcpcd
     sudo systemctl unmask hostapd
     sudo systemctl enable hostapd
     sudo systemctl enable dnsmasq
@@ -117,10 +138,16 @@ else
     source $ENV_FILE
 fi
 
-if [[ $1 == "TheOne" || $1 == "caca" ]]; then
-    internet_interface=${!1}
+# Set a default interface if no argument is provided
+if [[ -z $1 || $1 == "--skip" ]]; then
+    echo "No interface specified. Using default."
+    internet_interface=$TheOne
 else
-    internet_interface=$1
+    if [[ $1 == "TheOne" || $1 == "caca" ]]; then
+        internet_interface=${!1}
+    else
+        internet_interface=$1
+    fi
 fi
 
 # Determine the interface for the hotspot
@@ -130,6 +157,11 @@ else
     hotspot_interface=$TheOne
 fi
 
-connect_to_internet "$internet_interface"
-setup_hotspot "$hotspot_interface"
+# Check for the --help option
+if [[ $1 == "--help" ]]; then
+    show_help
+else
+    connect_to_internet "$internet_interface"
+    setup_hotspot "$hotspot_interface"
+fi
 
