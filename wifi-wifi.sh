@@ -1,9 +1,20 @@
 #!/bin/bash
+
 # Environment file to store persistent variables
 ENV_FILE=~/wifi_env.sh
 
 # File containing WiFi credentials
 WIFI_PASS_FILE=~/wifipass.txt
+
+# Ensure required packages are installed
+sudo apt-get update
+sudo apt-get install -y hostapd dnsmasq network-manager
+
+# Disable services to avoid conflicts during setup
+sudo systemctl stop hostapd
+sudo systemctl stop dnsmasq
+sudo systemctl disable hostapd
+sudo systemctl disable dnsmasq
 
 # Function to detect wireless interfaces and assign nicknames
 detect_and_assign_nicknames() {
@@ -92,12 +103,9 @@ EOF
 static ip_address=192.168.220.1/24" | sudo tee -a /etc/dhcpcd.conf
 
     # Restart services
-    sudo systemctl restart dhcpcd
     sudo systemctl unmask hostapd
-    sudo systemctl enable nftables
     sudo systemctl enable hostapd
     sudo systemctl enable dnsmasq
-    sudo systemctl start nftables
     sudo systemctl start hostapd
     sudo systemctl start dnsmasq
 }
@@ -124,3 +132,4 @@ fi
 
 connect_to_internet "$internet_interface"
 setup_hotspot "$hotspot_interface"
+
