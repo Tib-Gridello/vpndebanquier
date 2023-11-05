@@ -15,10 +15,6 @@ if [[ -f $WIFI_PASS_FILE ]]; then
         echo "Error: SSID or password is empty in $WIFI_PASS_FILE."
         exit 1
     fi
-else
-    echo "Error: WiFi credentials file $WIFI_PASS_FILE not found."
-    exit 1
-fi
 
 
 # Helper message
