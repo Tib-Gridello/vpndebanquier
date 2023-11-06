@@ -41,7 +41,7 @@ reset_network_interfaces() {
     sudo rm -f /etc/dnsmasq.conf
     sudo rm -f /etc/dhcpcd.conf
     sudo rm -f $ENV_FILE
-
+    sudo rm -f /etc/NetworkManager/system-connections/*
     # Remove interface-specific configuration files
     sudo rm -f /etc/NetworkManager/conf.d/wlan0.conf
     sudo rm -f /etc/NetworkManager/conf.d/wlan1.conf
@@ -76,16 +76,19 @@ for intf in $(iw dev | grep Interface | awk '{print $2}'); do
 done
 # Function to connect an interface to the internet
 connect_to_internet() {
-    local interface=wlan1
+    local interface=$1
     echo "####################"
     echo "Connecting $interface to the internet..."
-    sudo nmcli dev set wlan1 managed yes
-    nmcli dev wifi connect "\"$SSID\"" password "\"$PASSWORD\"" ifname "$interface"
+    sudo nmcli dev set $1 managed yes
+    echo "########################"
+    echo "Sleeping 4sec"
+    sleep 4
+    nmcli dev wifi connect $SSID password $PASSWORD ifname $interface
 }
 
 # Function to set up a WiFi hotspot
 setup_hotspot() {
-    local interface=wlan0
+    local interface=$1
     echo "####################"
     echo "Setting up $interface as a WiFi hotspot..."
 
@@ -205,6 +208,9 @@ else
     hotspot_interface=$TheOne
 fi
 
+echo "Hotspot interface = $hotspot_interface"
+echo "Internet interface = $internet_interface"
+
 # Disconnect all other wireless interfaces before connecting the designated one
 for intf in $(iw dev | grep Interface | awk '{print $2}'); do
     if [[ $intf != $internet_interface ]]; then
@@ -213,7 +219,7 @@ for intf in $(iw dev | grep Interface | awk '{print $2}'); do
 done
 
 # Connect the designated interface to the internet
-connect_to_internet "$internet_interface"
+connect_to_internet "$1"
 
 # Setup the other interface as a hotspot
-setup_hotspot "$hotspot_interface"
+setup_hotspot "$2"
