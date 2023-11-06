@@ -49,20 +49,54 @@ show_help() {
 
 list_interfaces() {
     echo "Available network interfaces:"
-    ip -o link show | awk -F': ' '{print $2}'
+    local count=1
+    local interfaces=$(ip -o link show | awk -F': ' '{print $2}')
+    for interface in $interfaces; do
+        local mac=$(ip link show $interface | awk '/ether/ {print $2}')
+        local type=""
+        if [[ $(lsusb | grep -i "$interface") ]]; then
+            type="USB antenna"
+        elif [[ $interface == "wlan0" ]]; then
+            type="Internal antenna"
+        fi
+        echo "$count) $interface - MAC: $mac ($type)"
+        let count++
+    done
 }
 
 choose_interfaces() {
     # List available interfaces
     list_interfaces
 
-    # Prompt user to choose internet interface
-    echo "Enter the interface you want to use for the internet connection (e.g., wlan0, eth0):"
-    read internet_interface
+    local interfaces=($(ip -o link show | awk -F': ' '{print $2}'))
+    local number_of_interfaces=${#interfaces[@]}
+
+    # Prompt user to choose internet interface by number
+    while true; do
+        echo "Enter the number of the interface you want to use for the internet connection:"
+        read internet_interface_number
+        if [[ $internet_interface_number -ge 1 && $internet_interface_number -le $number_of_interfaces ]]; then
+            internet_interface=${interfaces[$internet_interface_number-1]}
+            break
+        else
+            echo "Invalid selection. Please enter a number between 1 and $number_of_interfaces."
+        fi
+    done
     
-    # Prompt user to choose hotspot interface or 'none'
-    echo "Enter the interface you want to set up as a hotspot (e.g., wlan0), or 'none' if no hotspot is needed:"
-    read hotspot_interface
+    # Prompt user to choose hotspot interface by number or 'none'
+    while true; do
+        echo "Enter the number of the interface you want to set up as a hotspot, or 'none' if no hotspot is needed:"
+        read hotspot_interface_number
+        if [[ $hotspot_interface_number == "none" ]]; then
+            hotspot_interface="none"
+            break
+        elif [[ $hotspot_interface_number -ge 1 && $hotspot_interface_number -le $number_of_interfaces ]]; then
+            hotspot_interface=${interfaces[$hotspot_interface_number-1]}
+            break
+        else
+            echo "Invalid selection. Please enter a number between 1 and $number_of_interfaces or 'none'."
+        fi
+    done
 }
 
 # Main execution
