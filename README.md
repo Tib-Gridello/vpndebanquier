@@ -32,6 +32,7 @@ sudo make && sudo make install
 
 # Speedtest
 
-
+ALFA <--> wlan de la pi <--> internet : 9.31
+wlan de la pi <--> ALFA <--> internet :
 wlan de la pi  <--> eth0 : ~20
 ALFA AWUS036ACS <--> eth0 : ~20
