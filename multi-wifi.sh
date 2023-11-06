@@ -50,13 +50,13 @@ show_help() {
 list_interfaces() {
     echo "Available network interfaces:"
     local count=1
-    local interfaces=$(ip -o link show | awk -F': ' '{print $2}')
+    local interfaces=$(ip -o link show | awk -F': ' '{print $2}' | grep -v "lo")
     for interface in $interfaces; do
         local mac=$(ip link show $interface | awk '/ether/ {print $2}')
         local type=""
-        if [[ $(lsusb | grep -i "$interface") ]]; then
+        if [[ $(lsusb | grep -i "USB wireless") ]] && [[ $(iw dev $interface info | grep 'Interface') ]]; then
             type="USB antenna"
-        elif [[ $interface == "wlan0" ]]; then
+        elif [[ $(iw dev $interface info | grep 'Interface') ]]; then
             type="Internal antenna"
         fi
         echo "$count) $interface - MAC: $mac ($type)"
@@ -68,7 +68,7 @@ choose_interfaces() {
     # List available interfaces
     list_interfaces
 
-    local interfaces=($(ip -o link show | awk -F': ' '{print $2}'))
+    local interfaces=($(ip -o link show | awk -F': ' '{print $2}' | grep -v "lo"))
     local number_of_interfaces=${#interfaces[@]}
 
     # Prompt user to choose internet interface by number
@@ -98,6 +98,7 @@ choose_interfaces() {
         fi
     done
 }
+
 
 # Main execution
 if [[ $1 == "--help" ]]; then
