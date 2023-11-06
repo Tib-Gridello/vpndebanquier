@@ -1,5 +1,9 @@
 # vpndebanquier
 
+Prerequ
+
+sudo apt update && sudo apt install -y systemd network-manager hostapd dnsmasq dhcpcd iw usbutils
+
 **To check and add :**
 
 
