@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Environment file to store persistent variables
-ENV_FILE=~/wifi_env.sh
 
 # File containing WiFi credentials
 WIFI_PASS_FILE=~/wifipass.txt
@@ -22,14 +21,12 @@ show_help() {
 detect_and_assign_nicknames() {
     local usb_interface=$(lsusb | grep -i wireless | awk '{print $2":"$4}' | sed 's/://g')
     local good_interface=$(iw dev | grep -B 1 "$usb_interface" | awk '$1=="Interface" {print $2}')
-    local caca_interface=$(iw dev | grep -v "$good_interface" | awk '$1=="Interface" {print $2}' | head -n 1)
-
+    local caca_interface=$(iw dev | grep -v "$good_interface" | awk '$1=="Interface" {print $2}' | head -n 1) 
+    echo "caca = $caca_interface"
+    echo "good = $good_interface"
     # Store the nicknames and associated interfaces in the environment file
-    echo "export TheOne=$good_interface" > $ENV_FILE
-    echo "export caca=$caca_interface" >> $ENV_FILE
 
     # Source the environment file to make variables available in the current session
-    source $ENV_FILE
 }
 
 reset_network_interfaces() {
@@ -93,50 +90,27 @@ setup_hotspot() {
     echo "Setting up $interface as a WiFi hotspot..."
 
     # Tell NetworkManager to ignore this interface
-    echo "Telling NetworkManager to ignore $interface..."
-    sudo bash -c "cat > /etc/NetworkManager/conf.d/$interface.conf" <<EOF
-[keyfile]
-unmanaged-devices=interface-name:$interface
-EOF
 
     # Restart NetworkManager to apply changes
     sudo systemctl restart NetworkManager
 
     # Configure hostapd
     echo "Configuring hostapd..."
-    sudo bash -c "cat > /etc/hostapd/hostapd.conf" <<EOF
-interface=$interface
-ssid=PiHotspot
-hw_mode=g
-channel=7
-wmm_enabled=0
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-wpa=2
-wpa_passphrase=raspberry
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP
-EOF
+    sudo cp config/hostapd.conf.template /etc/hostapd/hostapd.conf
+sudo sed -i "s/\$1/$1/g" /etc/hostapd/hostapd.conf
 
     # Ensure hostapd knows where to find the configuration file
     echo "DAEMON_CONF=\"/etc/hostapd/hostapd.conf\"" | sudo tee -a /etc/default/hostapd
 
     # Configure dnsmasq
     echo "Configuring dnsmasq..."
-    sudo bash -c "cat > /etc/dnsmasq.conf" <<EOF
-interface=$interface
-dhcp-range=192.168.220.10,192.168.220.50,255.255.255.0,24h
-EOF
+    sudo cp config/dnsmasq.conf.template /etc/dnsmasq.conf
+sudo sed -i "s/\$1/$interface/g" /etc/dnsmasq.conf
 
     # Configure dhcpcd
     echo "Configuring dhcpcd..."
-    sudo bash -c "cat > /etc/dhcpcd.conf" <<EOF
-interface $interface
-static ip_address=192.168.220.1/24
-nohook wpa_supplicant
-EOF
+    sudo cp config/dhcpcd.conf.template /etc/dhcpcd.conf
+sudo sed -i "s/\$1/$interface/g" /etc/dhcpcd.conf
 
     # Restart services
     echo "Restarting network services..."
@@ -203,3 +177,4 @@ connect_to_internet "$1"
 
 # Setup the other interface as a hotspot
 setup_hotspot "$2"
+
