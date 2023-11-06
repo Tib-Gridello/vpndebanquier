@@ -188,28 +188,7 @@ else
     exit 1
 fi
 
-# Set a default interface if no argument is provided
-if [[ -z $1 || $1 == "--skip" ]]; then
-    echo "####################"
-    echo "No interface specified. Using default."
-    internet_interface=$TheOne
-else
-    if [[ $1 == "TheOne" || $1 == "caca" ]]; then
-        internet_interface=${!1}
-    else
-        internet_interface=$1
-    fi
-fi
 
-# Determine the interface for the hotspot
-if [[ $internet_interface == $TheOne ]]; then
-    hotspot_interface=$caca
-else
-    hotspot_interface=$TheOne
-fi
-
-echo "Hotspot interface = $hotspot_interface"
-echo "Internet interface = $internet_interface"
 
 # Disconnect all other wireless interfaces before connecting the designated one
 for intf in $(iw dev | grep Interface | awk '{print $2}'); do
@@ -218,6 +197,7 @@ for intf in $(iw dev | grep Interface | awk '{print $2}'); do
     fi
 done
 
+reset_network_interfaces
 # Connect the designated interface to the internet
 connect_to_internet "$1"
 
