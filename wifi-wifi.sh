@@ -42,6 +42,10 @@ reset_network_interfaces() {
     sudo rm -f /etc/dhcpcd.conf
     sudo rm -f $ENV_FILE
 
+    # Remove interface-specific configuration files
+    sudo rm -f /etc/NetworkManager/conf.d/wlan0.conf
+    sudo rm -f /etc/NetworkManager/conf.d/wlan1.conf
+
     # Restart network services
     if systemctl list-units --full -all | grep -Fq 'NetworkManager.service'; then
         sudo systemctl restart NetworkManager
@@ -60,7 +64,6 @@ reset_network_interfaces() {
         echo "Environment file $ENV_FILE not found. Cannot set interfaces as managed."
     fi
 }
-
 echo "Disconnecting other interfaces..."
 for intf in $(iw dev | grep Interface | awk '{print $2}'); do
     if [[ $intf != $internet_interface ]]; then
