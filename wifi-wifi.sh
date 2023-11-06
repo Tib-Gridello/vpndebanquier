@@ -32,8 +32,6 @@ detect_and_assign_nicknames() {
     source $ENV_FILE
 }
 
-# Function to reset network interfaces to default state
-# Function to reset network interfaces to default state
 reset_network_interfaces() {
     echo "####################"
     echo "Resetting network interfaces to default state..."
@@ -51,6 +49,15 @@ reset_network_interfaces() {
         sudo systemctl restart network-manager
     else
         echo "NetworkManager service not found. Please install or start the service manually."
+    fi
+
+    # Ensure both interfaces are managed by NetworkManager
+    if [[ -f $ENV_FILE ]]; then
+        source $ENV_FILE
+        nmcli dev set $TheOne managed yes
+        nmcli dev set $caca managed yes
+    else
+        echo "Environment file $ENV_FILE not found. Cannot set interfaces as managed."
     fi
 }
 
