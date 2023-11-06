@@ -76,15 +76,16 @@ for intf in $(iw dev | grep Interface | awk '{print $2}'); do
 done
 # Function to connect an interface to the internet
 connect_to_internet() {
-    local interface=$1
+    local interface=wlan1
     echo "####################"
     echo "Connecting $interface to the internet..."
+    sudo nmcli dev set wlan1 managed yes
     nmcli dev wifi connect "\"$SSID\"" password "\"$PASSWORD\"" ifname "$interface"
 }
 
 # Function to set up a WiFi hotspot
 setup_hotspot() {
-    local interface=$1
+    local interface=wlan0
     echo "####################"
     echo "Setting up $interface as a WiFi hotspot..."
 
