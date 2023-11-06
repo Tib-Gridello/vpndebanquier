@@ -22,17 +22,16 @@ show_help() {
 
 
 # ASCII Art
-echo "   /------------------------\"
-echo "  /                          \"
-echo " /        BANK OF ASCII       \"
-echo "/______________________________\__________"
-echo "|  ____    _______            |  \VPN/   |"
+echo "   /------------------------\\"
+echo "  /                          \\"
+echo " /        BANK OF ASCII       \\"
+echo "/______________________________\\__________"
+echo "|  ____    _______            |  \\VPN/   |"
 echo "| |ATM |  |       |           |   | |    |"
 echo "| |____|  |   $   |           |   |_|    |"
-echo "|         |_______|           |  /___\   |"
+echo "|         |_______|           |  /___\\   |"
 echo "|     |           |           |         |"
 echo "|_____|___________|___________|_________|"
-
 
 show_help() {
     echo "Usage: $0 [internet_interface] [hotspot_interface] [--skip] [--clean]"
