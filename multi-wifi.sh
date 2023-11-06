@@ -178,28 +178,18 @@ connect_to_internet() {
     local interface=$1
     echo "####################"
     echo "Connecting $interface to the internet..."
-    sudo nmcli dev set $1 managed yes
-    echo "########################"
-    echo "Sleeping 4sec"
-    sleep 4
-    nmcli dev wifi connect $SSID password $PASSWORD ifname $interface
-}
 
-    # New logic to handle Ethernet connections
+    # Check if the selected interface is Ethernet
     if [[ $interface == "eth0" ]]; then
         sudo nmcli con up id "$(nmcli -t -f NAME con show --active | grep 'eth0')"
+    else
+        # If it's a wireless interface, proceed with WiFi connection
+        sudo nmcli dev set $interface managed yes
+        echo "########################"
+        echo "Sleeping 4sec"
+        sleep 4
+        nmcli dev wifi connect $SSID password $PASSWORD ifname $interface
     fi
-
-
- {
-    local interface=$1
-    echo "####################"
-    echo "Connecting $interface to the internet..."
-    sudo nmcli dev set $1 managed yes
-    echo "########################"
-    echo "Sleeping 4sec"
-    sleep 4
-    nmcli dev wifi connect $SSID password $PASSWORD ifname $interface
 }
 
 # Function to set up a WiFi hotspot
