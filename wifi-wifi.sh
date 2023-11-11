@@ -191,12 +191,24 @@ ask_for_interface_selection() {
     fi
 }
 
+display_public_ip() {
+    public_ip=$(curl -s ifconfig.me)
+    echo "Current public IP: $public_ip"
+}
+
 # Function to set up a VPN connection
 setup_vpn() {
     echo "Setting up VPN connection..."
+    
+       # Display public IP before VPN connection
+    echo "Public IP before VPN connection:"
+    display_public_ip
     # Replace 'your-vpn-config.ovpn' with your actual OpenVPN configuration file
     sudo openvpn --config ~/vpndebanquier.ovpn &
-
+    echo "sleeping 6s"
+    sleep 6
+    echo "Public IP after VPN connection:"
+    display_public_ip
     # You can add similar logic for WireGuard or other VPN types
 }
 
