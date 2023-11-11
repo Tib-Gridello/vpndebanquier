@@ -196,6 +196,19 @@ display_public_ip() {
     echo "Current public IP: $public_ip"
 }
 
+# Function to find the active VPN interface (tun0 for OpenVPN, wg0 for WireGuard, etc.)
+find_vpn_interface() {
+    # Add logic here to determine the VPN interface
+    # This can be as simple as checking if 'tun0' or 'wg0' exists, or more complex logic based on the VPN type
+    if ip link show tun0 > /dev/null 2>&1; then
+        echo "tun0"
+    elif ip link show wg0 > /dev/null 2>&1; then
+        echo "wg0"
+    else
+        echo "unknown"
+    fi
+}
+
 # Function to set up a VPN connection
 setup_vpn() {
     echo "Setting up VPN connection..."
@@ -212,6 +225,23 @@ setup_vpn() {
     # You can add similar logic for WireGuard or other VPN types
 }
 
+# Function to modify and apply nftables rules based on the active VPN interface
+apply_nftables_rules() {
+    local vpn_interface=$(find_vpn_interface)
+
+    if [ "$vpn_interface" = "unknown" ]; then
+        echo "Unable to determine the VPN interface. Kill switch will not be activated."
+        return
+    fi
+
+    echo "Modifying nftables rules for interface: $vpn_interface"
+
+    # Use sed to replace the placeholder in the nftables.conf file
+    sudo sed -i "s/{{vpn_interface}}/$vpn_interface/g" /etc/nftables.conf
+
+    # Apply the modified nftables rules
+    sudo nft -f /etc/nftables.conf
+}
 # Function to set up a kill switch
 setup_kill_switch() {
     echo "Setting up kill switch..."
