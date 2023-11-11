@@ -10,7 +10,6 @@ show_help() {
     echo "Usage: $0 [interface|nickname] [--skip] [--clean]"
     echo ""
     echo "interface    The network interface to connect to the internet (e.g., wlan0, wlan1, eth0)."
-    echo "nickname     Use 'TheOne' for the USB antenna or 'caca' for the internal antenna."
     echo "--skip       Skip package updates, installations, and network reset."
     echo "--clean      Remove all configuration files and restart services to default state."
     echo ""
@@ -149,6 +148,8 @@ else
     echo "Error: WiFi credentials file $WIFI_PASS_FILE not found."
     exit 1
 fi
+
+
 # Function to ask user for interface selection
 ask_for_interface_selection() {
     # Display available interfaces
@@ -159,9 +160,15 @@ ask_for_interface_selection() {
         echo "$((i+1)). ${interfaces[i]}"
     done
 
-    # Check eth0 connectivity
-    if ip link show eth0 | grep -qw 'UP' && ping -c 1 -I eth0 8.8.8.8 >/dev/null 2>&1; then
-        echo "eth0 is connected to the internet. Please choose the interface for the hotspot:"
+    # Check if eth0 has an IP address
+    if ip addr show eth0 | grep -qw 'inet'; then
+        echo "eth0 has an IP address."
+        public_ip=$(curl -s ifconfig.me)
+        echo "Current public IP: $public_ip"
+        location=$(curl -s ipinfo.io/$public_ip/city)
+        echo "Location: $location"
+
+        echo "eth0 will be used for the internet connection. Please choose the interface for the hotspot:"
         read -p "Enter choice (1-${#interfaces[@]}): " hotspot_choice
         hotspot_interface=${interfaces[$((hotspot_choice-1))]}
         
@@ -171,7 +178,7 @@ ask_for_interface_selection() {
         echo "Choose the interface for the internet connection:"
         read -p "Enter choice (1-${#interfaces[@]}): " internet_choice
         internet_interface=${interfaces[$((internet_choice-1))]}
-        
+
         echo "Choose the interface for the hotspot:"
         read -p "Enter choice (1-${#interfaces[@]}): " hotspot_choice
         hotspot_interface=${interfaces[$((hotspot_choice-1))]}
