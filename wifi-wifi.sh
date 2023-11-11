@@ -242,27 +242,7 @@ apply_nftables_rules() {
     # Apply the modified nftables rules
     sudo nft -f /etc/nftables.conf
 }
-# Function to set up a kill switch
-setup_kill_switch() {
-    echo "Setting up kill switch..."
 
-    # Flush existing iptables rules
-    sudo iptables -F
-
-    # Default policy to drop all traffic
-    sudo iptables -P FORWARD DROP
-    sudo iptables -P OUTPUT DROP
-
-    # Allow traffic on the VPN interface (tun0 for OpenVPN)
-    sudo iptables -A OUTPUT -o tun0 -j ACCEPT
-
-    # Allow local traffic
-    sudo iptables -A OUTPUT -o lo -j ACCEPT
-    sudo iptables -A OUTPUT -d 192.168.0.0/16 -j ACCEPT  # Adjust for your local network
-
-    # Allow established and related connections
-    sudo iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-}
 
 # Main execution
 reset_network_interfaces
@@ -272,4 +252,4 @@ display_interfaces_and_check_eth0
 ask_for_interface_selection
 setup_vpn
 setup_kill_switch
-
+apply_nftables_rules
