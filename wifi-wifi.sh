@@ -17,17 +17,6 @@ show_help() {
     echo "If no interface or nickname is specified, 'TheOne' (USB antenna) will be used by default."
 }
 
-# Function to detect wireless interfaces and assign nicknames
-detect_and_assign_nicknames() {
-    local usb_interface=$(lsusb | grep -i wireless | awk '{print $2":"$4}' | sed 's/://g')
-    local good_interface=$(iw dev | grep -B 1 "$usb_interface" | awk '$1=="Interface" {print $2}')
-    local caca_interface=$(iw dev | grep -v "$good_interface" | awk '$1=="Interface" {print $2}' | head -n 1) 
-    echo "caca = $caca_interface"
-    echo "good = $good_interface"
-    # Store the nicknames and associated interfaces in the environment file
-
-    # Source the environment file to make variables available in the current session
-}
 
 reset_network_interfaces() {
     echo "####################"
@@ -71,6 +60,9 @@ for intf in $(iw dev | grep Interface | awk '{print $2}'); do
         sudo nmcli dev set $intf managed no
     fi
 done
+
+
+
 # Function to connect an interface to the internet
 connect_to_internet() {
     local interface=$1
@@ -141,11 +133,7 @@ if [[ $1 == "--clean" ]]; then
     exit 0
 fi
 
-if [[ ! -f $ENV_FILE ]]; then
-    detect_and_assign_nicknames
-else
-    source $ENV_FILE
-fi
+
 
 # Read WiFi credentials from ~/wifipass.txt
 if [[ -f $WIFI_PASS_FILE ]]; then
@@ -161,20 +149,45 @@ else
     echo "Error: WiFi credentials file $WIFI_PASS_FILE not found."
     exit 1
 fi
+# Function to ask user for interface selection
+ask_for_interface_selection() {
+    # Display available interfaces
+    echo "Available Network Interfaces:"
+    interfaces=($(ip link show | awk -F: '$0 !~ "lo|virbr|docker|^[^0-9]"{print $2;getline}'))
+    
+    for i in "${!interfaces[@]}"; do
+        echo "$((i+1)). ${interfaces[i]}"
+    done
 
+    # Check eth0 connectivity
+    if ip link show eth0 | grep -qw 'UP' && ping -c 1 -I eth0 8.8.8.8 >/dev/null 2>&1; then
+        echo "eth0 is connected to the internet. Please choose the interface for the hotspot:"
+        read -p "Enter choice (1-${#interfaces[@]}): " hotspot_choice
+        hotspot_interface=${interfaces[$((hotspot_choice-1))]}
+        
+        # Setup the chosen interface as a hotspot
+        setup_hotspot "$hotspot_interface"
+    else
+        echo "Choose the interface for the internet connection:"
+        read -p "Enter choice (1-${#interfaces[@]}): " internet_choice
+        internet_interface=${interfaces[$((internet_choice-1))]}
+        
+        echo "Choose the interface for the hotspot:"
+        read -p "Enter choice (1-${#interfaces[@]}): " hotspot_choice
+        hotspot_interface=${interfaces[$((hotspot_choice-1))]}
 
+        # Connect the chosen interface to the internet
+        connect_to_internet "$internet_interface"
 
-# Disconnect all other wireless interfaces before connecting the designated one
-for intf in $(iw dev | grep Interface | awk '{print $2}'); do
-    if [[ $intf != $internet_interface ]]; then
-        nmcli dev disconnect $intf
+        # Setup the other interface as a hotspot
+        setup_hotspot "$hotspot_interface"
     fi
-done
+}
 
+# Main execution
 reset_network_interfaces
-# Connect the designated interface to the internet
-connect_to_internet "$1"
+display_interfaces_and_check_eth0
 
-# Setup the other interface as a hotspot
-setup_hotspot "$2"
+# Call the function to ask for interface selection
+ask_for_interface_selection
 
