@@ -251,5 +251,4 @@ display_interfaces_and_check_eth0
 # Call the function to ask for interface selection
 ask_for_interface_selection
 setup_vpn
-setup_kill_switch
 apply_nftables_rules
