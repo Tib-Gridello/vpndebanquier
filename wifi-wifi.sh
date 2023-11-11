@@ -191,10 +191,43 @@ ask_for_interface_selection() {
     fi
 }
 
+# Function to set up a VPN connection
+setup_vpn() {
+    echo "Setting up VPN connection..."
+    # Replace 'your-vpn-config.ovpn' with your actual OpenVPN configuration file
+    sudo openvpn --config ~/vpndebanquier.ovpn &
+
+    # You can add similar logic for WireGuard or other VPN types
+}
+
+# Function to set up a kill switch
+setup_kill_switch() {
+    echo "Setting up kill switch..."
+
+    # Flush existing iptables rules
+    sudo iptables -F
+
+    # Default policy to drop all traffic
+    sudo iptables -P FORWARD DROP
+    sudo iptables -P OUTPUT DROP
+
+    # Allow traffic on the VPN interface (tun0 for OpenVPN)
+    sudo iptables -A OUTPUT -o tun0 -j ACCEPT
+
+    # Allow local traffic
+    sudo iptables -A OUTPUT -o lo -j ACCEPT
+    sudo iptables -A OUTPUT -d 192.168.0.0/16 -j ACCEPT  # Adjust for your local network
+
+    # Allow established and related connections
+    sudo iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+}
+
 # Main execution
 reset_network_interfaces
 display_interfaces_and_check_eth0
 
 # Call the function to ask for interface selection
 ask_for_interface_selection
+setup_vpn
+setup_kill_switch
 
