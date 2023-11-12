@@ -21,6 +21,16 @@ reset_network_interfaces() {
     echo "####################"
     echo "Resetting network interfaces to default state..."
 
+    # Killing OpenVPN processes
+    echo "Killing OpenVPN processes..."
+    sudo pkill openvpn
+
+    # Bring down tun0 and other interfaces
+    for intf in $(ip link show | awk -F: '$0 !~ "lo|virbr|docker|^[^0-9]"{print $2;getline}'); do
+        echo "Bringing down $intf..."
+        sudo ip link set $intf down
+    done
+
     # Remove any existing configuration files
     sudo rm -f /etc/hostapd/hostapd.conf
     sudo rm -f /etc/dnsmasq.conf
@@ -40,16 +50,6 @@ reset_network_interfaces() {
         echo "NetworkManager service not found. Please install or start the service manually."
     fi
 }
-echo "Disconnecting other interfaces..."
-for intf in $(iw dev | grep Interface | awk '{print $2}'); do
-    if [[ $intf != $internet_interface ]]; then
-        echo "Disconnecting $intf..."
-        nmcli dev disconnect $intf
-        # Explicitly tell NetworkManager to ignore this interface
-        echo "Telling NetworkManager to ignore $intf..."
-        sudo nmcli dev set $intf managed no
-    fi
-done
 
 
 
