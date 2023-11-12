@@ -39,6 +39,8 @@ reset_network_interfaces() {
     # Remove interface-specific configuration files
     sudo rm -f /etc/NetworkManager/conf.d/wlan0.conf
     sudo rm -f /etc/NetworkManager/conf.d/wlan1.conf
+    echo "flushing ruleset nft"
+    sudo nft flush ruleset
 
     # Restart network services
     if systemctl list-units --full -all | grep -Fq 'NetworkManager.service'; then
