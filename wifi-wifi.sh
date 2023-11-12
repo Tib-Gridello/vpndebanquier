@@ -238,7 +238,6 @@ apply_nftables_rules() {
 
 # Main execution
 reset_network_interfaces
-display_interfaces_and_check_eth0
 
 # Call the function to ask for interface selection
 ask_for_interface_selection
