@@ -13,7 +13,6 @@ show_help() {
     echo "--skip       Skip package updates, installations, and network reset."
     echo "--clean      Remove all configuration files and restart services to default state."
     echo ""
-    echo "If no interface or nickname is specified, 'TheOne' (USB antenna) will be used by default."
 }
 
 
