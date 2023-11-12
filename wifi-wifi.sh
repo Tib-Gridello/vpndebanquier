@@ -39,15 +39,6 @@ reset_network_interfaces() {
     else
         echo "NetworkManager service not found. Please install or start the service manually."
     fi
-
-    # Ensure both interfaces are managed by NetworkManager
-    if [[ -f $ENV_FILE ]]; then
-        source $ENV_FILE
-        nmcli dev set $TheOne managed yes
-        nmcli dev set $caca managed yes
-    else
-        echo "Environment file $ENV_FILE not found. Cannot set interfaces as managed."
-    fi
 }
 echo "Disconnecting other interfaces..."
 for intf in $(iw dev | grep Interface | awk '{print $2}'); do
