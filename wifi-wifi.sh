@@ -135,41 +135,6 @@ sudo sed -i "s/\$1/$interface/g" /etc/dhcpcd.conf
 }
 
 
-# Main execution
-if [[ $1 == "--help" ]]; then
-    show_help
-    exit 0
-fi
-
-if [[ $1 == "--clean" ]]; then
-    reset_network_interfaces
-    exit 0
-fi
-
-if [[ $1 == "--vpn" ]]; then
-    setup_vpn
-    find_vpn_interface
-    prep_nftables_rules
-    set_nftables_rules
-    exit 0
-fi
-
-
-
-# Read WiFi credentials from ~/wifipass.txt
-if [[ -f $WIFI_PASS_FILE ]]; then
-    SSID=$(sed -n '1p' $WIFI_PASS_FILE)
-    PASSWORD=$(sed -n '2p' $WIFI_PASS_FILE)
-    
-    # Check if SSID or PASSWORD is empty
-    if [[ -z "$SSID" || -z "$PASSWORD" ]]; then
-        echo "Error: SSID or password is empty in $WIFI_PASS_FILE."
-        exit 1
-    fi
-else
-    echo "Error: WiFi credentials file $WIFI_PASS_FILE not found."
-    exit 1
-fi
 
 
 # Function to ask user for interface selection
@@ -293,6 +258,41 @@ set_nftables_rules() {
 }
 
 
+# Main execution
+if [[ $1 == "--help" ]]; then
+    show_help
+    exit 0
+fi
+
+if [[ $1 == "--clean" ]]; then
+    reset_network_interfaces
+    exit 0
+fi
+
+if [[ $1 == "--vpn" ]]; then
+    setup_vpn
+    find_vpn_interface
+    prep_nftables_rules
+    set_nftables_rules
+    exit 0
+fi
+
+
+
+# Read WiFi credentials from ~/wifipass.txt
+if [[ -f $WIFI_PASS_FILE ]]; then
+    SSID=$(sed -n '1p' $WIFI_PASS_FILE)
+    PASSWORD=$(sed -n '2p' $WIFI_PASS_FILE)
+    
+    # Check if SSID or PASSWORD is empty
+    if [[ -z "$SSID" || -z "$PASSWORD" ]]; then
+        echo "Error: SSID or password is empty in $WIFI_PASS_FILE."
+        exit 1
+    fi
+else
+    echo "Error: WiFi credentials file $WIFI_PASS_FILE not found."
+    exit 1
+fi
 # Main execution
 reset_network_interfaces
 
