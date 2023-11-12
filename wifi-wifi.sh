@@ -61,6 +61,10 @@ connect_to_internet() {
 
     echo "####################"
     echo "Attempting to connect $interface to the internet..."
+        # Set the network interface to be managed by NetworkManager
+    sudo nmcli dev set $interface managed yes
+    echo "dodo de 3"
+    sleep 3
 
     while [[ $attempt -le $max_attempts ]]; do
         echo "Attempt $attempt of $max_attempts..."
