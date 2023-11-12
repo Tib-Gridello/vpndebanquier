@@ -52,16 +52,34 @@ reset_network_interfaces() {
 
 
 
-# Function to connect an interface to the internet
+# Function to connect an interface to the internet with retry logic
 connect_to_internet() {
     local interface=$1
+    local max_attempts=5
+    local attempt=1
+    local sleep_duration=4
+
     echo "####################"
-    echo "Connecting $interface to the internet..."
-    sudo nmcli dev set $1 managed yes
-    echo "########################"
-    echo "Sleeping 4sec"
-    sleep 4
-    nmcli dev wifi connect $SSID password $PASSWORD ifname $interface
+    echo "Attempting to connect $interface to the internet..."
+
+    while [[ $attempt -le $max_attempts ]]; do
+        echo "Attempt $attempt of $max_attempts..."
+
+        # Attempt to connect
+        if nmcli dev wifi connect $SSID password $PASSWORD ifname $interface; then
+            echo "Connection successful."
+            return 0
+        else
+            echo "Connection failed, retrying in $sleep_duration seconds..."
+            sleep $sleep_duration
+            # Increment attempt counter and sleep duration
+            ((attempt++))
+            ((sleep_duration+=2))
+        fi
+    done
+
+    echo "Failed to connect after $max_attempts attempts."
+    return 1
 }
 
 # Function to set up a WiFi hotspot
