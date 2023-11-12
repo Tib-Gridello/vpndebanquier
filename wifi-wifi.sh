@@ -253,8 +253,10 @@ prep_nftables_rules() {
 }
 # Function to modify and apply nftables rules based on the active VPN interface
 set_nftables_rules() {
-    # Apply the modified nftables rules
-    sudo nft -f /etc/nftables.conf
+    sudo cp ~/config/reset-ntables.service /etc/systemd/system/reset-nftables.service
+    sudo systemctl daemon-reload
+    sudo systemctl start reset-nftables.service
+    sudo systemctl enable reset-nftables.service
 }
 
 
