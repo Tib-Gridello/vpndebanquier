@@ -196,9 +196,10 @@ ask_for_interface_selection() {
 
         # Connect the chosen interface to the internet
         connect_to_internet "$internet_interface"
-
+        
         # Setup the other interface as a hotspot
         setup_hotspot "$hotspot_interface"
+        sudo sed -i "s/\$hotspot_interface/$hotspot_interface/g" config/nftables.conf
     fi
 }
 
