@@ -204,18 +204,40 @@ find_vpn_interface() {
 # Function to set up a VPN connection
 setup_vpn() {
     echo "Setting up VPN connection..."
-    
-       # Display public IP before VPN connection
+
+    # Display public IP before VPN connection
     echo "Public IP before VPN connection:"
     display_public_ip
-    # Replace 'your-vpn-config.ovpn' with your actual OpenVPN configuration file
-    sudo openvpn --config ~/vpndebanquier.ovpn &
-    echo "sleeping 6s"
-    sleep 6
-    echo "Public IP after VPN connection:"
-    display_public_ip
-    # You can add similar logic for WireGuard or other VPN types
+
+    # Copy the OpenVPN configuration file to the required directory
+    sudo cp ~/vpndebanquier.ovpn /etc/openvpn/vpndebanquier.ovpn
+
+    # Set up the OpenVPN service using the template
+    echo "Configuring OpenVPN service..."
+    sudo cp config/openvpn.template /etc/systemd/system/openvpn@vpndebanquier.service
+
+    # Reload systemd daemon to recognize new service
+    sudo systemctl daemon-reload
+
+    # Start OpenVPN using the systemd service
+    echo "Starting OpenVPN service..."
+    sudo systemctl start openvpn@vpndebanquier
+
+    # Wait for a few seconds to allow the VPN connection to establish
+    echo "Waiting for VPN connection to establish..."
+    sleep 10
+
+    # Check if the VPN is up and running
+    if ip link show tun0 > /dev/null 2>&1; then
+        echo "VPN connection established."
+        echo "Public IP after VPN connection:"
+        display_public_ip
+    else
+        echo "Failed to establish VPN connection."
+        exit 1
+    fi
 }
+
 
 # Function to modify and apply nftables rules based on the active VPN interface
 apply_nftables_rules() {
