@@ -154,7 +154,7 @@ ask_for_interface_selection() {
     # Check if eth0 has an IP address
     if ip addr show eth0 | grep -qw 'inet'; then
         echo "eth0 has an IP address."
-        display_public_ip()
+        display_public_ip
 
         echo "eth0 will be used for the internet connection. Please choose the interface for the hotspot:"
         read -p "Enter choice (1-${#interfaces[@]}): " hotspot_choice
