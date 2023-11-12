@@ -154,10 +154,7 @@ ask_for_interface_selection() {
     # Check if eth0 has an IP address
     if ip addr show eth0 | grep -qw 'inet'; then
         echo "eth0 has an IP address."
-        public_ip=$(curl -s ifconfig.me)
-        echo "Current public IP: $public_ip"
-        location=$(curl -s ipinfo.io/$public_ip/city)
-        echo "Location: $location"
+        display_public_ip()
 
         echo "eth0 will be used for the internet connection. Please choose the interface for the hotspot:"
         read -p "Enter choice (1-${#interfaces[@]}): " hotspot_choice
@@ -183,8 +180,12 @@ ask_for_interface_selection() {
 }
 
 display_public_ip() {
+    echo "##############"
     public_ip=$(curl -s ifconfig.me)
     echo "Current public IP: $public_ip"
+    location=$(curl -s ipinfo.io/$public_ip/city)
+    echo "Location: $location"
+    echo "##############"
 }
 
 # Function to find the active VPN interface (tun0 for OpenVPN, wg0 for WireGuard, etc.)
@@ -242,4 +243,5 @@ display_interfaces_and_check_eth0
 # Call the function to ask for interface selection
 ask_for_interface_selection
 setup_vpn
+find_vpn_interface
 apply_nftables_rules
