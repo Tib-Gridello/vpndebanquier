@@ -3,7 +3,7 @@ Description=Reset nftables rules
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash -c '/usr/sbin/nft -f /etc/nftables.conf'
+ExecStart=/bin/bash -c '/usr/sbin/nft -f /etc/nftables.conf.bak'
 
 [Install]
 WantedBy=multi-user.target
