@@ -272,7 +272,7 @@ apply_nftables_rules() {
     fi
 
     echo "Modifying nftables rules for interface: $vpn_interface"
-    sudo mv ~/vpndebanquier/config/nftables.conf /etc/nftables.conf
+    sudo cp ~/vpndebanquier/config/nftables.conf /etc/nftables.conf
     # Use sed to replace the placeholder in the nftables.conf file
     sudo sed -i "s/\$vpn_interface/$vpn_interface/g" /etc/nftables.conf
 
