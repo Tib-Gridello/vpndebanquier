@@ -26,7 +26,7 @@ reset_network_interfaces() {
     sudo pkill openvpn
 
     # Bring down tun0 and other interfaces
-    for intf in $(ip link show | awk -F: '$0 !~ "lo|virbr|docker|^[^0-9]"{print $2;getline}'); do
+    for intf in $(ip link show | awk -F: '$0 !~ "lo|virbr|docker|eth0|^[^0-9]"{print $2;getline}'); do
         echo "Bringing down $intf..."
         sudo ip link set $intf down
     done
