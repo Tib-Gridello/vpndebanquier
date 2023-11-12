@@ -146,6 +146,14 @@ if [[ $1 == "--clean" ]]; then
     exit 0
 fi
 
+if [[ $1 == "--vpn" ]]; then
+    setup_vpn
+    find_vpn_interface
+    prep_nftables_rules
+    set_nftables_rules
+    exit 0
+fi
+
 
 
 # Read WiFi credentials from ~/wifipass.txt
@@ -263,9 +271,8 @@ setup_vpn() {
     fi
 }
 
-
 # Function to modify and apply nftables rules based on the active VPN interface
-apply_nftables_rules() {
+prep_nftables_rules() {
     local vpn_interface=$(find_vpn_interface)
 
     if [ "$vpn_interface" = "unknown" ]; then
@@ -277,6 +284,10 @@ apply_nftables_rules() {
     # Use sed to replace the placeholder in the nftables.conf file
     sudo sed -i "s/\$vpn_interface/$vpn_interface/g" /etc/nftables.conf
 
+ 
+}
+# Function to modify and apply nftables rules based on the active VPN interface
+set_nftables_rules() {
     # Apply the modified nftables rules
     sudo nft -f /etc/nftables.conf
 }
@@ -289,4 +300,5 @@ reset_network_interfaces
 ask_for_interface_selection
 setup_vpn
 find_vpn_interface
-apply_nftables_rules
+prep_nftables_rules
+set_nftables_rules
