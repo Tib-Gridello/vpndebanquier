@@ -5,7 +5,6 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStartPre=/bin/bash -c '/usr/sbin/nft -f /etc/nftables.conf'
 ExecStart=/usr/sbin/openvpn --config /etc/openvpn/%i.ovpn
 ExecStartPost=/bin/bash -c '/usr/sbin/nft -f /etc/nftables.conf'
 Restart=on-failure
