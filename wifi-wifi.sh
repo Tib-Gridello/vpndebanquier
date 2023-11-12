@@ -199,7 +199,8 @@ ask_for_interface_selection() {
         
         # Setup the other interface as a hotspot
         setup_hotspot "$hotspot_interface"
-        sudo sed -i "s/\$hotspot_interface/$hotspot_interface/g" config/nftables.conf
+        sudo cp config/nftables.conf /etc/nftables.conf
+        sudo sed -i "s/\$hotspot_interface/$hotspot_interface/g" /etc/nftables.conf
     fi
 }
 
@@ -273,7 +274,6 @@ apply_nftables_rules() {
     fi
 
     echo "Modifying nftables rules for interface: $vpn_interface"
-    sudo cp ~/vpndebanquier/config/nftables.conf /etc/nftables.conf
     # Use sed to replace the placeholder in the nftables.conf file
     sudo sed -i "s/\$vpn_interface/$vpn_interface/g" /etc/nftables.conf
 
