@@ -66,6 +66,7 @@ def execute_connection_script(internet_interface, hotspot_interface, ssid):
     logging.debug(f"Starting script with ssid {ssid}")
     wifi_creds_path = os.path.expanduser(f'home/naps/wifi/{ssid}')
     script_path = os.path.expanduser('~/vpndebanquier/wifi-wifi.sh')
+    logging.debug(f"internet {internet_interface} hotspot {hotspot_interface} wifi {wifi_creds_path}")
     command = [script_path, '--internet', internet_interface, '--hotspot', hotspot_interface, '--wifi-creds', wifi_creds_path]
     subprocess.run(command, check=True)
 
