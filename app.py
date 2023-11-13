@@ -86,7 +86,7 @@ def index():
             logging.debug(f"Scanning on {selected_interface}")
             ssids = execute_scan(selected_interface)
             form.ssid.choices = [(s, s) for s in ssids]
-            return render_template('index.html', form=form, scanned=True)
+        return render_template('index.html', form=form, scanned=True)
 
         if form.connect.data:
             try:
