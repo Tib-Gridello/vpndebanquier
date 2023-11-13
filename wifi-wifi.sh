@@ -29,12 +29,9 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# After parsing arguments
-echo "Parsed internet interface: $internet_interface"
-echo "Parsed hotspot interface: $hotspot_interface"
-
 
 # ASCII Art
+echo "\n"
 echo "   /------------------------\\"
 echo "  /                          \\"
 echo " /        VPN DE BANQUIER     \\"
@@ -45,6 +42,9 @@ echo "| |____|  |   $   |           |   |_|    |"
 echo "|         |_______|           |  /___\\   |"
 echo "|     |           |           |         |"
 echo "|_____|___________|___________|_________|"
+
+
+
 # Helper message
 show_help() {
     echo "Usage: $0 [interface|nickname] [--skip] [--clean]"
