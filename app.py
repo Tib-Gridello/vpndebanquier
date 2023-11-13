@@ -68,28 +68,11 @@ def execute_connection_script(internet_interface, hotspot_interface, ssid):
     command = [script_path, '--internet', internet_interface, '--hotspot', hotspot_interface, '--wifi-creds', wifi_creds_path]
     subprocess.run(command, check=True)
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def index():
-    logging.debug("Entered index route")
     form = WiFiForm()
     update_interface_choices(form)
-
-    # Check for SSIDs in query string
-    ssids = request.args.get('ssids')
-    if ssids:       
-        ssid_list = ssids.split(',')
-        form.ssid.choices = [(ssid, ssid) for ssid in ssid_list]
-
-    if form.validate_on_submit():
-        if form.scan.data:
-            logging.debug("form valid on subgit")
-            return handle_scan(form)
-        elif form.connect.data:
-            logging.debug(f"Connect button pressed. User selections: Interface - {form.interface.data}, SSID - {form.ssid.data}, Internet Interface - {form.internet_interface.data}, Hotspot Interface - {form.hotspot_interface.data}")
-            return handle_connect(form)
-
-    scanned = 'ssids' in request.args
-    return render_template('index.html', form=form, scanned=scanned)
+    return render_template('index.html', form=form, scanned=False)
 
 
 def update_interface_choices(form):
