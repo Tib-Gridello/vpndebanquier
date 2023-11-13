@@ -145,7 +145,8 @@ def connect():
             flash(f"Error: {e}")
             logging.error(f"Error in connect: {e}")
             traceback.print_exc()
-
+    else:
+        logging.debug("Form validation failed in /connect route")
     return redirect(url_for('index'))
 
 
