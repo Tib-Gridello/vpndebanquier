@@ -2,22 +2,17 @@
 <html>
 <head>
     <title>Connect to Wi-Fi</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        form { margin-bottom: 20px; }
-        .message { color: red; margin-bottom: 10px; }
-    </style>
 </head>
 <body>
     {% for message in get_flashed_messages() %}
-        <p class="message">{{ message }}</p>
+        <p>{{ message }}</p>
     {% endfor %}
-    <form action="{{ url_for('index') }}" method="post">
+    <form action="{{ url_for('index') if not scanned else url_for('scan') }}" method="post">
         {{ form.hidden_tag() }}
         <p>
             {{ form.interface.label }}<br>
             {{ form.interface }}<br>
-            <button type="submit" name="scan">Scan</button>
+            {{ form.scan() }}
         </p>
         {% if scanned %}
         <p>
@@ -31,5 +26,14 @@
         <p>{{ form.connect() }}</p>
         {% endif %}
     </form>
+<script>
+    document.querySelector('input[name="scan"]').addEventListener('click', function(event) {
+        event.preventDefault();
+        let form = document.querySelector('form');
+        form.action = "{{ url_for('scan') }}";
+        form.submit();
+    });
+</script>
 </body>
 </html>
+
