@@ -10,24 +10,26 @@ hotspot_interface=""
 # Read command line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --internet=*)
-        internet_interface="${1#*=}"
-        shift # Remove --internet from processing
+        --internet)
+        internet_interface="$2"
+        shift 2 # Remove --internet and its value from processing
         ;;
-        --hotspot=*)
-        hotspot_interface="${1#*=}"
-        shift # Remove --hotspot from processing
+        --hotspot)
+        hotspot_interface="$2"
+        shift 2 # Remove --hotspot and its value from processing
         ;;
-        --wifi-creds=*)
-        WIFI_PASS_FILE="${1#*=}"
-        shift # Remove --wifi-creds from processing
+        --wifi-creds)
+        WIFI_PASS_FILE="$2"
+        shift 2 # Remove --wifi-creds and its value from processing
         ;;
         *)
-        # Unknown option
+        # Unknown option or no more options
         shift
         ;;
     esac
 done
+
+
 
 
 # ASCII Art
