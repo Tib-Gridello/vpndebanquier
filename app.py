@@ -72,19 +72,27 @@ def index():
     form = WiFiForm()
     update_interface_choices(form)
 
+    # Check for SSIDs in query string
+    ssids = request.args.get('ssids')
+    if ssids:
+        ssid_list = ssids.split(',')
+        form.ssid.choices = [(ssid, ssid) for ssid in ssid_list]
+
     if form.validate_on_submit():
         if form.scan.data:
             return handle_scan(form)
         elif form.connect.data:
             return handle_connect(form)
 
-    return render_template('index.html', form=form, scanned='ssids' in request.args)
+    scanned = 'ssids' in request.args
+    return render_template('index.html', form=form, scanned=scanned)
+
 
 def update_interface_choices(form):
     interfaces = get_network_interfaces()
     form.interface.choices = [(i, i) for i in interfaces]
-    form.internet_interface.choices = [(i, i) for i in interfaces]
-    form.hotspot_interface.choices = [(i, i) for i in interfaces]
+    form.internet_interface.choices = [('eth0', 'eth0')] + [(i, i) for i in interfaces]
+    form.hotspot_interface.choices = [('hotspot', 'hotspot')] + [(i, i) for i in interfaces]
 
 def handle_scan(form):
     selected_interface = form.interface.data
@@ -111,15 +119,15 @@ def handle_connect(form):
 
     return redirect(url_for('index'))
 
-    
+
 @app.route('/scan', methods=['POST'])
 def scan():
     form = WiFiForm()
+    update_interface_choices(form)
+    
     selected_interface = form.interface.data
-    logging.debug(f"Scanning on {selected_interface}")
-
     ssids = execute_scan(selected_interface)
-    return redirect(url_for('index', ssids=ssids))
+    return redirect(url_for('index', ssids=','.join(ssids)))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5555)
