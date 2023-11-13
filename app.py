@@ -62,6 +62,7 @@ def save_wifi_credentials(ssid, password):
         traceback.print_exc()
 
 def execute_connection_script(internet_interface, hotspot_interface, ssid):
+    logging.debug(f"Starting script with ssid {ssid}")
     wifi_creds_path = os.path.expanduser(f'home/naps/wifi/{ssid}')
     script_path = os.path.expanduser('~/vpndebanquier/wifi-wifi.sh')
     command = [script_path, '--internet', internet_interface, '--hotspot', hotspot_interface, '--wifi-creds', wifi_creds_path]
@@ -92,7 +93,7 @@ def update_interface_choices(form):
     interfaces = get_network_interfaces()
     form.interface.choices = [(i, i) for i in interfaces]
     form.internet_interface.choices = [('eth0', 'eth0')] + [(i, i) for i in interfaces]
-    form.hotspot_interface.choices = [('hotspot', 'hotspot')] + [(i, i) for i in interfaces]
+    form.hotspot_interface.choices = [('eth0', 'eth0')] + [(i, i) for i in interfaces]
 
 def handle_scan(form):
     selected_interface = form.interface.data
@@ -102,13 +103,16 @@ def handle_scan(form):
     return render_template('index.html', form=form, scanned=True)
 
 def handle_connect(form):
+    logging.debug("Entered handle_connect function")
     ssid = form.ssid.data
     password = form.password.data
     internet_interface = form.internet_interface.data
     hotspot_interface = form.hotspot_interface.data
 
     try:
+       logging.debug(f"Saving WiFi credentials for SSID: {ssid}")
         save_wifi_credentials(ssid, password)
+        logging.debug("WiFi credentials saved successfully.")
         flash(f'WiFi credentials saved for {ssid}.')
         execute_connection_script(internet_interface, hotspot_interface, ssid)
         flash('Configuration saved and script executed.')
