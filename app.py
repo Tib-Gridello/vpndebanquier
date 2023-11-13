@@ -82,7 +82,7 @@ def index():
 
     if form.validate_on_submit():
         if form.scan.data:
-             logging.debug("form valid on sub")
+             logging.debug("form valid on subgit")
             return handle_scan(form)
         elif form.connect.data:
             logging.debug(f"Connect button pressed. User selections: Interface - {form.interface.data}, SSID - {form.ssid.data}, Internet Interface - {form.internet_interface.data}, Hotspot Interface - {form.hotspot_interface.data}")
