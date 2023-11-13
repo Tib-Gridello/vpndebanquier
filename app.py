@@ -3,6 +3,7 @@ import os
 import re
 import json
 import logging
+from flask import session
 from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import SelectField, PasswordField, SubmitField
@@ -120,6 +121,7 @@ def scan():
         logging.debug(f"Scanning on interface: {selected_interface}")
         ssids = execute_scan(selected_interface)
         form.ssid.choices = [(s, s) for s in ssids]
+        session['scanned_ssids'] = ssids
         return render_template('index.html', form=form, scanned=True)
 
     return render_template('index.html', form=form, scanned=False)
@@ -127,11 +129,9 @@ def scan():
 @app.route('/connect', methods=['POST'])
 def connect():
     form = WiFiForm()
-    # Populate SSID choices from session or a persistent storage
+    # Retrieve SSID choices from session
     ssids = session.get('scanned_ssids', [])
     form.ssid.choices = [(s, s) for s in ssids]
-    update_interface_choices(form)
-
     if form.validate_on_submit():
         ssid = form.ssid.data
         logging.debug("form validate")
