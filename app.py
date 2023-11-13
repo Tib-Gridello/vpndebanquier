@@ -58,7 +58,7 @@ def scan():
         interfaces = get_network_interfaces()
         form.interface.choices = [(i, i) for i in interfaces]
         return render_template('index.html', form=form, scanned=False)
-        
+
 def save_user_configuration(internet_interface, hotspot_interface):
     config = {
         'internet_interface': internet_interface,
@@ -67,7 +67,13 @@ def save_user_configuration(internet_interface, hotspot_interface):
     with open('user_config.json', 'w') as f:
         json.dump(config, f)
 
-
+def save_wifi_credentials(ssid, password):
+    wifi_dir = os.path.expanduser('~/wifi')
+    os.makedirs(wifi_dir, exist_ok=True)
+    file_path = os.path.join(wifi_dir, ssid)
+    with open(file_path, 'w') as f:
+        f.write(password)
+        
 def get_network_interfaces():
     interfaces = [i for i in os.listdir('/sys/class/net/') if re.match(r'wlan\d+', i)]
     return interfaces
