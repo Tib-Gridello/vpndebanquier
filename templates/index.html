@@ -39,9 +39,10 @@
     document.querySelector('input[name="connect"]').addEventListener('click', function(event) {
         event.preventDefault();
         let form = document.getElementById('wifiForm');
-        form.action = "{{ url_for('index') }}"; // Keep the original action for the connect functionality
+        form.action = "{{ url_for('connect') }}";
         form.submit();
     });
 </script>
+
 </body>
 </html>

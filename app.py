@@ -76,7 +76,7 @@ def index():
 
     # Check for SSIDs in query string
     ssids = request.args.get('ssids')
-    if ssids:
+    if ssids:       
         ssid_list = ssids.split(',')
         form.ssid.choices = [(ssid, ssid) for ssid in ssid_list]
 
@@ -127,14 +127,45 @@ def handle_connect(form):
     return redirect(url_for('index'))
 
 
-@app.route('/scan', methods=['POST'])
+@app.route('/scan', methods=['GET', 'POST'])
 def scan():
     form = WiFiForm()
     update_interface_choices(form)
-    
-    selected_interface = form.interface.data
-    ssids = execute_scan(selected_interface)
-    return redirect(url_for('index', ssids=','.join(ssids)))
+
+    if request.method == 'POST':
+        selected_interface = form.interface.data
+        logging.debug(f"Scanning on interface: {selected_interface}")
+        ssids = execute_scan(selected_interface)
+        form.ssid.choices = [(s, s) for s in ssids]
+        return render_template('index.html', form=form, scanned=True)
+
+    return render_template('index.html', form=form, scanned=False)
+
+@app.route('/connect', methods=['POST'])
+def connect():
+    form = WiFiForm()
+    update_interface_choices(form)
+
+    if form.validate_on_submit():
+        ssid = form.ssid.data
+        password = form.password.data
+        internet_interface = form.internet_interface.data
+        hotspot_interface = form.hotspot_interface.data
+        logging.debug(f"Attempting to connect. SSID: {ssid}, Internet Interface: {internet_interface}, Hotspot Interface: {hotspot_interface}")
+        
+        try:
+            save_wifi_credentials(ssid, password)
+            logging.debug("WiFi credentials saved successfully.")
+            execute_connection_script(internet_interface, hotspot_interface, ssid)
+            flash('Connection successful.')
+        except Exception as e:
+            flash(f"Error: {e}")
+            logging.error(f"Error in connect: {e}")
+            traceback.print_exc()
+
+    return redirect(url_for('index'))
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5555)
