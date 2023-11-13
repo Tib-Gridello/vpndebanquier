@@ -126,9 +126,10 @@ def scan():
 
 @app.route('/connect', methods=['POST'])
 def connect():
-    logging.debug("Enetered conect route")
-   
     form = WiFiForm()
+    # Populate SSID choices from session or a persistent storage
+    ssids = session.get('scanned_ssids', [])
+    form.ssid.choices = [(s, s) for s in ssids]
     update_interface_choices(form)
 
     if form.validate_on_submit():
