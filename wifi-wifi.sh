@@ -1,9 +1,33 @@
 #!/bin/bash
 
-# Environment file to store persistent variables
-
 # File containing WiFi credentials
 WIFI_PASS_FILE=~/wifipass.txt
+
+# Default values for the interfaces
+internet_interface=""
+hotspot_interface=""
+
+# Read command line arguments
+for arg in "$@"
+do
+    case $arg in
+        --internet=*)
+        internet_interface="${arg#*=}"
+        shift # Remove --internet from processing
+        ;;
+        --hotspot=*)
+        hotspot_interface="${arg#*=}"
+        shift # Remove --hotspot from processing
+        ;;
+        --wifi-creds=*)
+        WIFI_PASS_FILE="${arg#*=}"
+        shift # Remove --wifi-creds from processing
+        ;;
+        *)
+        # Unknown option
+        ;;
+    esac
+done
 
 # Helper message
 show_help() {
@@ -140,40 +164,56 @@ sudo sed -i "s/\$1/$interface/g" /etc/dhcpcd.conf
 # Function to ask user for interface selection
 ask_for_interface_selection() {
     # Display available interfaces
-    echo "Available Network Interfaces:"
-    interfaces=($(ip link show | awk -F: '$0 !~ "lo|virbr|docker|^[^0-9]"{print $2;getline}'))
-    
-    for i in "${!interfaces[@]}"; do
-        echo "$((i+1)). ${interfaces[i]}"
-    done
 
-    # Check if eth0 has an IP address
-    if ip addr show eth0 | grep -qw 'inet'; then
-        echo "eth0 has an IP address."
-        display_public_ip
-
-        echo "eth0 will be used for the internet connection. Please choose the interface for the hotspot:"
-        read -p "Enter choice (1-${#interfaces[@]}): " hotspot_choice
-        hotspot_interface=${interfaces[$((hotspot_choice-1))]}
-        
-        # Setup the chosen interface as a hotspot
-        setup_hotspot "$hotspot_interface"
-    else
-        echo "Choose the interface for the internet connection:"
-        read -p "Enter choice (1-${#interfaces[@]}): " internet_choice
-        internet_interface=${interfaces[$((internet_choice-1))]}
-
-        echo "Choose the interface for the hotspot:"
-        read -p "Enter choice (1-${#interfaces[@]}): " hotspot_choice
-        hotspot_interface=${interfaces[$((hotspot_choice-1))]}
-
-        # Connect the chosen interface to the internet
-        connect_to_internet "$internet_interface"
-        
-        # Setup the other interface as a hotspot
+    # If internet_interface and hotspot_interface are provided via arguments, skip user input
+    if [[ -n $internet_interface ]] && [[ -n $hotspot_interface ]]; then
+        echo "Using provided internet interface: $internet_interface"
+        echo "Using provided hotspot interface: $hotspot_interface"
+       
+        # Only call connect_to_internet if internet_interface is not eth0
+        if [[ $internet_interface != "eth0" ]]; then
+            connect_to_internet "$internet_interface"
+        fi
         setup_hotspot "$hotspot_interface"
         sudo cp config/nftables.conf /etc/nftables.conf
         sudo sed -i "s/\$hotspot_interface/$hotspot_interface/g" /etc/nftables.conf
+    else
+
+        echo "Available Network Interfaces:"
+        interfaces=($(ip link show | awk -F: '$0 !~ "lo|virbr|docker|^[^0-9]"{print $2;getline}'))
+        
+        for i in "${!interfaces[@]}"; do
+            echo "$((i+1)). ${interfaces[i]}"
+        done
+
+        # Check if eth0 has an IP address
+        if ip addr show eth0 | grep -qw 'inet'; then
+            echo "eth0 has an IP address."
+            display_public_ip
+
+            echo "eth0 will be used for the internet connection. Please choose the interface for the hotspot:"
+            read -p "Enter choice (1-${#interfaces[@]}): " hotspot_choice
+            hotspot_interface=${interfaces[$((hotspot_choice-1))]}
+            
+            # Setup the chosen interface as a hotspot
+            setup_hotspot "$hotspot_interface"
+        else
+            echo "Choose the interface for the internet connection:"
+            read -p "Enter choice (1-${#interfaces[@]}): " internet_choice
+            internet_interface=${interfaces[$((internet_choice-1))]}
+
+            echo "Choose the interface for the hotspot:"
+            read -p "Enter choice (1-${#interfaces[@]}): " hotspot_choice
+            hotspot_interface=${interfaces[$((hotspot_choice-1))]}
+
+            # Connect the chosen interface to the internet
+            connect_to_internet "$internet_interface"
+            
+            # Setup the other interface as a hotspot
+            setup_hotspot "$hotspot_interface"
+            sudo cp config/nftables.conf /etc/nftables.conf
+            sudo sed -i "s/\$hotspot_interface/$hotspot_interface/g" /etc/nftables.conf
+        fi
     fi
 }
 
