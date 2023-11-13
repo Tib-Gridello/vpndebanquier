@@ -17,13 +17,13 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')
 logging.basicConfig(filename='flask_app.log', level=logging.DEBUG)
 
 class WiFiForm(FlaskForm):
-    interface = SelectField('Interface', choices=[])
+    interface = SelectField('Interface', choices=[('eth0', 'eth0'), ('wlan0', 'wlan0'), ('wlan1', 'wlan1')])
     ssid = SelectField('SSID', choices=[])
     password = PasswordField('Password')
     scan = SubmitField('Scan')
     connect = SubmitField('Connect')
-    internet_interface = SelectField('Internet Interface', choices=[])
-    hotspot_interface = SelectField('Hotspot Interface', choices=[])
+    internet_interface = SelectField('Internet Interface', choices=[('eth0', 'eth0'), ('wlan0', 'wlan0'), ('wlan1', 'wlan1')])
+    hotspot_interface = SelectField('Hotspot Interface', choices=[('eth0', 'eth0'), ('wlan0', 'wlan0'), ('wlan1', 'wlan1')])
     submit_config = SubmitField('Save Configuration')
 
 def get_network_interfaces():
