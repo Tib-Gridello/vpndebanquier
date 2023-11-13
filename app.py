@@ -68,7 +68,8 @@ def execute_connection_script(internet_interface, hotspot_interface, ssid):
     script_path = os.path.expanduser('~/vpndebanquier/wifi-wifi.sh')
     logging.debug(f"internet {internet_interface} hotspot {hotspot_interface} wifi {wifi_creds_path}")
     command = [script_path, '--internet', internet_interface, '--hotspot', hotspot_interface, '--wifi-creds', wifi_creds_path]
-    subprocess.run(command, check=True)
+    logging.debug(f"command = {command}")
+   # subprocess.run(command, check=True)
 
 @app.route('/', methods=['GET'])
 def index():
