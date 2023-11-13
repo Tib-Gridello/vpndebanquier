@@ -75,6 +75,11 @@ def index():
     form.internet_interface.choices = [(i, i) for i in interfaces]
     form.hotspot_interface.choices = [(i, i) for i in interfaces]
 
+    # Handling SSID selection and password input
+    if request.args.get('ssids'):
+        ssids = request.args.get('ssids').split(',')
+        form.ssid.choices = [(s, s) for s in ssids]
+
     if form.validate_on_submit():
         if form.scan.data:
             selected_interface = form.interface.data
@@ -85,21 +90,28 @@ def index():
 
         if form.connect.data:
             try:
-                save_wifi_credentials(form.ssid.data, form.password.data)
-                flash('WiFi credentials saved.')
+                ssid = form.ssid.data
+                password = form.password.data
+                save_wifi_credentials(ssid, password)
+                flash(f'WiFi credentials saved in {ssid}. File content: {password}')
             except Exception as e:
                 flash(f"Error: {e}")
-                logging.error(f"Error in form submission: {e}")
-                traceback.print_exc()
-            return redirect(url_for('index'))
-
+                # Error handling code
+            return redirect(url_for('index'))if form.connect.data:
+          
         if form.submit_config.data:
-            save_user_configuration(form.internet_interface.data, form.hotspot_interface.data)
-            flash('Configuration saved.')
+            try:
+                internet_interface = form.internet_interface.data
+                hotspot_interface = form.hotspot_interface.data
+                execute_connection_script(internet_interface, hotspot_interface, ssid)
+                flash('Configuration saved and script executed.')
+            except Exception as e:
+                flash(f"Error: {e}")
+                # Error handling code
             return redirect(url_for('index'))
 
-    return render_template('index.html', form=form, scanned=False)
-
+    return render_template('index.html', form=form, scanned='ssids' in request.args)
+    
 @app.route('/scan', methods=['POST'])
 def scan():
     form = WiFiForm()
