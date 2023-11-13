@@ -29,6 +29,10 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# After parsing arguments
+echo "Parsed internet interface: $internet_interface"
+echo "Parsed hotspot interface: $hotspot_interface"
+
 
 # ASCII Art
 echo "   /------------------------\\"
