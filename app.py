@@ -67,23 +67,6 @@ def execute_connection_script(internet_interface, hotspot_interface, ssid):
     command = [script_path, '--internet', internet_interface, '--hotspot', hotspot_interface, '--wifi-creds', wifi_creds_path]
     subprocess.run(command, check=True)
 
-
-# Define the scan function
-@app.route('/scan', methods=['GET', 'POST'])
-def scan():
-    form = WiFiForm()
-
-    if request.method == 'POST':
-        selected_interface = form.interface.data
-        logging.debug(f"Scanning on {selected_interface}")
-        return execute_scan(selected_interface)
-    else:
-        # GET request: Display interfaces for scanning
-        interfaces = get_network_interfaces()
-        form.interface.choices = [(i, i) for i in interfaces]
-        return render_template('index.html', form=form, scanned=False)
-
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
     form = WiFiForm()
@@ -116,6 +99,15 @@ def index():
             return redirect(url_for('index'))
 
     return render_template('index.html', form=form, scanned=False)
+
+@app.route('/scan', methods=['POST'])
+def scan():
+    form = WiFiForm()
+    selected_interface = form.interface.data
+    logging.debug(f"Scanning on {selected_interface}")
+
+    ssids = execute_scan(selected_interface)
+    return redirect(url_for('index', ssids=ssids))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5555)
