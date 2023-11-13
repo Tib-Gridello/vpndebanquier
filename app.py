@@ -110,7 +110,7 @@ def handle_connect(form):
     hotspot_interface = form.hotspot_interface.data
 
     try:
-       logging.debug(f"Saving WiFi credentials for SSID: {ssid}")
+        logging.debug(f"Saving WiFi credentials for SSID: {ssid}")
         save_wifi_credentials(ssid, password)
         logging.debug("WiFi credentials saved successfully.")
         flash(f'WiFi credentials saved for {ssid}.')
