@@ -57,7 +57,8 @@ def save_wifi_credentials(ssid, password):
         os.makedirs(wifi_dir, exist_ok=True)
         file_path = os.path.join(wifi_dir, ssid)
         with open(file_path, 'w') as f:
-            f.write(password)
+            f.write(ssid + '\n')
+            f.write(password + '\n')
     except Exception as e:
         logging.error(f"Error saving WiFi credentials: {e}")
         traceback.print_exc()
