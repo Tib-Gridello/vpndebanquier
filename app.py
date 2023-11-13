@@ -126,11 +126,15 @@ def scan():
 
 @app.route('/connect', methods=['POST'])
 def connect():
+    logging.debug("Enetered conect route")
+   
     form = WiFiForm()
     update_interface_choices(form)
 
     if form.validate_on_submit():
         ssid = form.ssid.data
+        logging.debug("form validate")
+
         password = form.password.data
         internet_interface = form.internet_interface.data
         hotspot_interface = form.hotspot_interface.data
