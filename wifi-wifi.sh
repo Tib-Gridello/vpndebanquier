@@ -8,26 +8,27 @@ internet_interface=""
 hotspot_interface=""
 
 # Read command line arguments
-for arg in "$@"
-do
-    case $arg in
+while [[ $# -gt 0 ]]; do
+    case $1 in
         --internet=*)
-        internet_interface="${arg#*=}"
+        internet_interface="${1#*=}"
         shift # Remove --internet from processing
         ;;
         --hotspot=*)
-        hotspot_interface="${arg#*=}"
+        hotspot_interface="${1#*=}"
         shift # Remove --hotspot from processing
         ;;
         --wifi-creds=*)
-        WIFI_PASS_FILE="${arg#*=}"
+        WIFI_PASS_FILE="${1#*=}"
         shift # Remove --wifi-creds from processing
         ;;
         *)
         # Unknown option
+        shift
         ;;
     esac
 done
+
 
 # ASCII Art
 echo "   /------------------------\\"
