@@ -138,7 +138,7 @@ setup_hotspot() {
     # Configure hostapd
     echo "Configuring hostapd..."
     sudo cp config/hostapd.conf.template /etc/hostapd/hostapd.conf
-sudo sed -i "s/\$1/$1/g" /etc/hostapd/hostapd.conf
+    sudo sed -i "s/\$1/$1/g" /etc/hostapd/hostapd.conf
 
     # Ensure hostapd knows where to find the configuration file
     echo "DAEMON_CONF=\"/etc/hostapd/hostapd.conf\"" | sudo tee -a /etc/default/hostapd
@@ -146,12 +146,12 @@ sudo sed -i "s/\$1/$1/g" /etc/hostapd/hostapd.conf
     # Configure dnsmasq
     echo "Configuring dnsmasq..."
     sudo cp config/dnsmasq.conf.template /etc/dnsmasq.conf
-sudo sed -i "s/\$1/$interface/g" /etc/dnsmasq.conf
+    sudo sed -i "s/\$1/$interface/g" /etc/dnsmasq.conf
 
     # Configure dhcpcd
     echo "Configuring dhcpcd..."
     sudo cp config/dhcpcd.conf.template /etc/dhcpcd.conf
-sudo sed -i "s/\$1/$interface/g" /etc/dhcpcd.conf
+    sudo sed -i "s/\$1/$interface/g" /etc/dhcpcd.conf
 
     # Restart services
     echo "Restarting network services..."
@@ -176,6 +176,10 @@ sudo sed -i "s/\$1/$interface/g" /etc/dhcpcd.conf
 # Function to ask user for interface selection
 ask_for_interface_selection() {
     # Display available interfaces
+
+
+    echo "Internet Interface: $internet_interface"
+    echo "Hotspot Interface: $hotspot_interface"
 
     # If internet_interface and hotspot_interface are provided via arguments, skip user input
     if [[ -n $internet_interface ]] && [[ -n $hotspot_interface ]]; then
