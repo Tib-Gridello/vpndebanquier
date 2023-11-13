@@ -18,19 +18,23 @@ class WiFiForm(FlaskForm):
     password = PasswordField('Password')
     scan = SubmitField('Scan')
     connect = SubmitField('Connect')
+    internet_interface = SelectField('Internet Interface', choices=[])
+    hotspot_interface = SelectField('Hotspot Interface', choices=[])
+    submit_config = SubmitField('Save Configuration')
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     form = WiFiForm()
-
-    # Whitelist interfaces
-    interfaces = [i for i in os.listdir('/sys/class/net/') if re.match(r'wlan\d+', i)]
+    interfaces = get_network_interfaces()
     form.interface.choices = [(i, i) for i in interfaces]
+    form.internet_interface.choices = [(i, i) for i in interfaces]
+    form.hotspot_interface.choices = [(i, i) for i in interfaces]
 
     if form.validate_on_submit():
-        if form.scan.data:
-            return redirect(url_for('scan'))
-
+        if form.submit_config.data:
+            save_user_configuration(form.internet_interface.data, form.hotspot_interface.data)
+            flash('Configuration saved.')
+            return redirect(url_for('index'))
         if form.connect.data:
             # Add the logic to update the Wi-Fi connection
             interface = form.interface.data
@@ -54,6 +58,15 @@ def scan():
         interfaces = get_network_interfaces()
         form.interface.choices = [(i, i) for i in interfaces]
         return render_template('index.html', form=form, scanned=False)
+        
+def save_user_configuration(internet_interface, hotspot_interface):
+    config = {
+        'internet_interface': internet_interface,
+        'hotspot_interface': hotspot_interface
+    }
+    with open('user_config.json', 'w') as f:
+        json.dump(config, f)
+
 
 def get_network_interfaces():
     interfaces = [i for i in os.listdir('/sys/class/net/') if re.match(r'wlan\d+', i)]
