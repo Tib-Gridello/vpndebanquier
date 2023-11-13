@@ -29,6 +29,17 @@ do
     esac
 done
 
+# ASCII Art
+echo "   /------------------------\\"
+echo "  /                          \\"
+echo " /        VPN DE BANQUIER     \\"
+echo "/______________________________\\__________"
+echo "|  ____    _______            |  \\VPN/   |"
+echo "| |ATM |  |       |           |   | |    |"
+echo "| |____|  |   $   |           |   |_|    |"
+echo "|         |_______|           |  /___\\   |"
+echo "|     |           |           |         |"
+echo "|_____|___________|___________|_________|"
 # Helper message
 show_help() {
     echo "Usage: $0 [interface|nickname] [--skip] [--clean]"
