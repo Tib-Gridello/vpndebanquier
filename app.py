@@ -70,47 +70,47 @@ def execute_connection_script(internet_interface, hotspot_interface, ssid):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     form = WiFiForm()
+    update_interface_choices(form)
+
+    if form.validate_on_submit():
+        if form.scan.data:
+            return handle_scan(form)
+        elif form.connect.data:
+            return handle_connect(form)
+
+    return render_template('index.html', form=form, scanned='ssids' in request.args)
+
+def update_interface_choices(form):
     interfaces = get_network_interfaces()
     form.interface.choices = [(i, i) for i in interfaces]
     form.internet_interface.choices = [(i, i) for i in interfaces]
     form.hotspot_interface.choices = [(i, i) for i in interfaces]
 
-    # Handling SSID selection and password input
-    if request.args.get('ssids'):
-        ssids = request.args.get('ssids').split(',')
-        form.ssid.choices = [(s, s) for s in ssids]
+def handle_scan(form):
+    selected_interface = form.interface.data
+    logging.debug(f"Scanning on {selected_interface}")
+    ssids = execute_scan(selected_interface)
+    form.ssid.choices = [(s, s) for s in ssids]
+    return render_template('index.html', form=form, scanned=True)
 
-    if form.validate_on_submit():
-        if form.scan.data:
-            selected_interface = form.interface.data
-            logging.debug(f"Scanning on {selected_interface}")
-            ssids = execute_scan(selected_interface)
-            form.ssid.choices = [(s, s) for s in ssids]
-        return render_template('index.html', form=form, scanned=True)
+def handle_connect(form):
+    ssid = form.ssid.data
+    password = form.password.data
+    internet_interface = form.internet_interface.data
+    hotspot_interface = form.hotspot_interface.data
 
-        if form.connect.data:
-            try:
-                ssid = form.ssid.data
-                password = form.password.data
-                save_wifi_credentials(ssid, password)
-                flash(f'WiFi credentials saved in {ssid}. File content: {password}')
-            except Exception as e:
-                flash(f"Error: {e}")
-                # Error handling code
-            return redirect(url_for('index'))
-          
-        if form.submit_config.data:
-            try:
-                internet_interface = form.internet_interface.data
-                hotspot_interface = form.hotspot_interface.data
-                execute_connection_script(internet_interface, hotspot_interface, ssid)
-                flash('Configuration saved and script executed.')
-            except Exception as e:
-                flash(f"Error: {e}")
-                # Error handling code
-            return redirect(url_for('index'))
+    try:
+        save_wifi_credentials(ssid, password)
+        flash(f'WiFi credentials saved for {ssid}.')
+        execute_connection_script(internet_interface, hotspot_interface, ssid)
+        flash('Configuration saved and script executed.')
+    except Exception as e:
+        flash(f"Error: {e}")
+        logging.error(f"Error in handle_connect: {e}")
+        traceback.print_exc()
 
-    return render_template('index.html', form=form, scanned='ssids' in request.args)
+    return redirect(url_for('index'))
+
     
 @app.route('/scan', methods=['POST'])
 def scan():
