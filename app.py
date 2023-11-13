@@ -150,10 +150,10 @@ def connect():
             logging.error(f"Error in connect: {e}")
             traceback.print_exc()
     else:
-    logging.debug("Form validation failed in /connect route")
-    for field, errors in form.errors.items():
-        for error in errors:
-            logging.debug(f"Error in the {field} field - {error}")
+        logging.debug("Form validation failed in /connect route")
+        for field, errors in form.errors.items():
+            for error in errors:
+                logging.debug(f"Error in the {field} field - {error}")
     return redirect(url_for('index'))
 
 
