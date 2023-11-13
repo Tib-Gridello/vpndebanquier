@@ -18,20 +18,14 @@
         <p>
             {{ form.ssid.label }}<br>
             {{ form.ssid }}<br>
-        </p>
-        <p>
             {{ form.password.label }}<br>
             {{ form.password }}<br>
-        </p>
-        <p>
             {{ form.internet_interface.label }}<br>
             {{ form.internet_interface }}<br>
-        </p>
-        <p>
             {{ form.hotspot_interface.label }}<br>
             {{ form.hotspot_interface }}<br>
+            {{ form.connect() }}
         </p>
-        <p>{{ form.connect() }}</p>
         {% endif %}
     </form>
 <script>
@@ -39,6 +33,13 @@
         event.preventDefault();
         let form = document.getElementById('wifiForm');
         form.action = "{{ url_for('scan') }}";
+        form.submit();
+    });
+
+    document.querySelector('input[name="connect"]').addEventListener('click', function(event) {
+        event.preventDefault();
+        let form = document.getElementById('wifiForm');
+        form.action = "{{ url_for('index') }}"; // Keep the original action for the connect functionality
         form.submit();
     });
 </script>
