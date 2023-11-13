@@ -97,7 +97,7 @@ def index():
             except Exception as e:
                 flash(f"Error: {e}")
                 # Error handling code
-            return redirect(url_for('index'))if form.connect.data:
+            return redirect(url_for('index'))
           
         if form.submit_config.data:
             try:
