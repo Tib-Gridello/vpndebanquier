@@ -72,13 +72,13 @@ def index():
     form = WiFiForm()
     interfaces = get_network_interfaces()
     form.interface.choices = [(i, i) for i in interfaces]
+    form.internet_interface.choices = [(i, i) for i in interfaces]
+    form.hotspot_interface.choices = [(i, i) for i in interfaces]
 
-    ssids = request.args.get('ssids')
-    if ssids:
-        ssids_list = ssids.split(',')
-        form.ssid.choices = [(ssid, ssid) for ssid in ssids_list]
-    else:
-        form.ssid.choices = [('', '')]
+    # Handling SSID selection and password input
+    if request.args.get('ssids'):
+        ssids = request.args.get('ssids').split(',')
+        form.ssid.choices = [(s, s) for s in ssids]
 
     if form.validate_on_submit():
         if form.scan.data:
